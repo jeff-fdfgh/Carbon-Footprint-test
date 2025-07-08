@@ -25,15 +25,37 @@
             color: white;
             border-color: #ef4444; /* border-red-500 */
         }
+        .nav-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #d1d5db; /* border-gray-300 */
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .nav-btn.answered {
+            background-color: #6b7280; /* bg-gray-500 */
+            color: white;
+            border-color: #6b7280;
+        }
+        .nav-btn.current {
+            border-color: #3b82f6; /* border-blue-500 */
+            border-width: 2px;
+            font-weight: bold;
+            color: #3b82f6;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4">
 
-    <div id="quiz-container" class="w-full max-w-3xl mx-auto">
+    <div id="quiz-container" class="w-full max-w-4xl mx-auto">
         <!-- 開始畫面 -->
         <div id="start-screen" class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl text-center">
             <h1 class="text-3xl md:text-4xl font-bold text-green-600 dark:text-green-400 mb-6">產品碳足跡知識測驗</h1>
-            <p class="text-gray-600 dark:text-gray-400 mb-6">本測驗旨在評估您對產品碳足跡核心標準與方法論的深度理解。測驗共60題，<strong class="text-red-500">限時90分鐘</strong>。</p>
+            <p class="text-gray-600 dark:text-gray-400 mb-6">本測驗旨在深度評估您的專業知識。共60題，<strong class="text-red-500">限時90分鐘</strong>。</p>
             <div class="flex justify-center space-x-4 mb-8 text-sm text-gray-500 dark:text-gray-400">
                 <span>簡易: 20題 (1分/題)</span>
                 <span>中等: 20題 (2分/題)</span>
@@ -46,7 +68,13 @@
 
         <!-- 測驗畫面 -->
         <div id="quiz-screen" class="hidden bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl">
+            <!-- 題目導覽列 -->
             <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-3">題目導覽</h3>
+                <div id="question-nav" class="grid grid-cols-10 md:grid-cols-15 lg:grid-cols-20 gap-2"></div>
+            </div>
+            
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <div class="flex justify-between items-center mb-2">
                     <p class="text-sm font-semibold text-green-600 dark:text-green-400">問題 <span id="question-number"></span> / 60</p>
                     <div id="timer" class="text-lg font-bold text-red-500">90:00</div>
@@ -55,11 +83,14 @@
                     <div id="progress-bar" class="bg-green-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
                 </div>
             </div>
-            <div id="question-text" class="text-xl md:text-2xl font-bold mb-6 min-h-[6rem]"></div>
+            
+            <div id="question-text" class="text-xl md:text-2xl font-bold my-6 min-h-[6rem]"></div>
             <div id="options-container" class="space-y-4"></div>
-            <button id="next-btn" class="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition-transform transform hover:scale-105 shadow-md">
-                下一題
-            </button>
+            
+            <div class="flex justify-between mt-8">
+                <button id="prev-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg text-lg transition-transform transform hover:scale-105 shadow-md">上一題</button>
+                <button id="next-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition-transform transform hover:scale-105 shadow-md">下一題</button>
+            </div>
         </div>
 
         <!-- 結果畫面 -->
@@ -85,7 +116,7 @@
     <script>
         const questionBank = {
             easy: [
-                // 易 (50題, 每題1分)
+                // 易 (50題, 每題1分) - 重新設計以測試基礎但關鍵的觀念
                 { question: "產品碳足跡(CFP)的核心定義是基於何種評估範疇？", options: ["A. 僅限製造階段的直接排放", "B. 涵蓋產品完整生命週期的溫室氣體總量", "C. 僅計算運輸與銷售的排放", "D. 組織年度的總體排放"], answer: "B", points: 1 },
                 { question: "生命週期評估(LCA)方法論的第一個 foundational 階段是什麼？", options: ["A. 盤查分析 (LCI)", "B. 衝擊評估 (LCIA)", "C. 目標與範疇界定 (Goal and Scope Definition)", "D. 闡釋 (Interpretation)"], answer: "C", points: 1 },
                 { question: "ISO 14067標準是專門為哪一類型的溫室氣體評估所制定？", options: ["A. 國家層級的排放清冊", "B. 企業組織的年度盤查", "C. 特定產品或服務的生命週期", "D. 減量專案的成效確證"], answer: "C", points: 1 },
@@ -197,7 +228,7 @@
                 { question: "在LCA中，選擇不同的衝擊評估方法(LCIA method)，例如ReCiPe或IMPACT World+，可能會對下列哪個結果產生最顯著的影響？", options: ["A. 盤查清單中的原始數據(LCI)", "B. 功能單位的定義", "C. 各環境衝擊類別(如酸化、優養化)的量化結果與相對重要性", "D. 系統邊界的劃定"], answer: "C", points: 2 },
                 { question: "若一家公司同時生產化學品A(高價值)與副產品B(低價值廢酸)，若採用經濟價值分配法，可能會導致什麼潛在問題？", options: ["A. 大部分的環境負荷會被分配到副產品B，扭曲其真實衝擊", "B. 這種方法最為公平，沒有任何問題", "C. 計算過程會變得非常簡單", "D. 大部分的環境負荷會被分配到產品A，可能低估了廢酸處理的真實環境成本"], answer: "D", points: 2 },
                 { question: "在CFP研究中，時間邊界(Temporal Boundary)的設定為何重要？", options: ["A. 僅是為了報告格式要求", "B. 為了確保所收集的活動數據與所使用的排放係數，在時間上具有一致性與代表性", "C. 為了決定研究需要花費多長時間", "D. 為了配合查證員的行程"], answer: "B", points: 2 },
-                { question: "根據ISO 14067，若產品在使用階段會產生溫室氣體排放(如燃料車)，但其排放量高度取決於不可預測的消費者行為，研究者應如何處理？", options: ["A. 忽略使用階段，因為無法準確計算", "B. 應建立一個或多個標準化的使用情境(scenario)，並清楚說明其假設基礎與限制", "C. 僅計算其理論上的最低排放量", "D. 要求所有消費者回報其使用數據"], answer: "B", points: 2 },
+                { question: "根據ISO 14067，若產品在使用階段會產生溫室氣体排放(如燃料車)，但其排放量高度取決於不可預測的消費者行為，研究者應如何處理？", options: ["A. 忽略使用階段，因為無法準確計算", "B. 應建立一個或多個標準化的使用情境(scenario)，並清楚說明其假設基礎與限制", "C. 僅計算其理論上的最低排放量", "D. 要求所有消費者回報其使用數據"], answer: "B", points: 2 },
                 { question: "在進行查證時，查證員如何評估一家公司所選用的二級數據是否恰當？", options: ["A. 只要是來自知名LCA軟體即可", "B. 評估其數據品質指標(DQR)，檢視其技術、地理、時間的相關性是否符合研究範疇", "C. 僅確認數據是否為免費", "D. 只要公司能提供數據來源連結即可"], answer: "B", points: 2 },
                 { question: "「搖籃到搖籃(Cradle-to-Cradle)」的設計理念，對傳統LCA的「廢棄階段」提出了何種挑戰？", options: ["A. 廢棄階段變得更不重要", "B. 傳統的「廢棄」概念被「回到循環」所取代，需評估材料進入生物或工業循環的效益與衝擊", "C. 使廢棄階段的計算變得更簡單", "D. 證明所有產品都無法回收"], answer: "B", points: 2 },
                 { question: "在LCA中，何謂「截斷誤差(Truncation Error)」？", options: ["A. 因使用截斷準則而忽略的累積排放所造成的誤差", "B. 計算機的浮點數運算誤差", "C. 人工輸入數據時的打字錯誤", "D. 查證員在報告中發現的錯誤"], answer: "A", points: 2 },
@@ -253,6 +284,7 @@
         const questionTextEl = document.getElementById('question-text');
         const optionsContainer = document.getElementById('options-container');
         const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
         const finalScoreEl = document.getElementById('final-score');
         const scoreMessageEl = document.getElementById('score-message');
         const restartBtn = document.getElementById('restart-btn');
@@ -260,6 +292,7 @@
         const timerEl = document.getElementById('timer');
         const resultTitleEl = document.getElementById('result-title');
         const resultSubtitleEl = document.getElementById('result-subtitle');
+        const questionNav = document.getElementById('question-nav');
 
         // Quiz State
         let quizQuestions = [];
@@ -318,16 +351,50 @@
             resultScreen.classList.add('hidden');
             quizScreen.classList.remove('hidden');
             
-            displayQuestion();
+            buildQuestionNav();
+            goToQuestion(0);
             startTimer(90 * 60); // 90 minutes
+        }
+        
+        function buildQuestionNav() {
+            questionNav.innerHTML = '';
+            for (let i = 0; i < quizQuestions.length; i++) {
+                const navBtn = document.createElement('button');
+                navBtn.textContent = i + 1;
+                navBtn.classList.add('nav-btn');
+                navBtn.onclick = () => {
+                    goToQuestion(i);
+                };
+                questionNav.appendChild(navBtn);
+            }
+        }
+
+        function updateQuestionNav() {
+            const navBtns = questionNav.querySelectorAll('.nav-btn');
+            navBtns.forEach((btn, index) => {
+                btn.classList.remove('current', 'answered');
+                if (userAnswers[index] !== null) {
+                    btn.classList.add('answered');
+                }
+                if (index === currentQuestionIndex) {
+                    btn.classList.add('current');
+                }
+            });
+        }
+
+        function goToQuestion(index) {
+            if (index < 0 || index >= quizQuestions.length) return;
+            currentQuestionIndex = index;
+            displayQuestion();
         }
 
         function displayQuestion() {
+            updateQuestionNav();
             const selectedAnswer = userAnswers[currentQuestionIndex];
             const question = quizQuestions[currentQuestionIndex];
             
             questionNumberEl.textContent = currentQuestionIndex + 1;
-            progressBar.style.width = `${((currentQuestionIndex) / quizQuestions.length) * 100}%`;
+            progressBar.style.width = `${((currentQuestionIndex + 1) / quizQuestions.length) * 100}%`;
             questionTextEl.textContent = question.question;
             
             optionsContainer.innerHTML = '';
@@ -345,10 +412,12 @@
                     document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
                     button.classList.add('selected');
                     userAnswers[currentQuestionIndex] = optionChar;
+                    updateQuestionNav();
                 };
                 optionsContainer.appendChild(button);
             });
             
+            prevBtn.disabled = currentQuestionIndex === 0;
             if (currentQuestionIndex === quizQuestions.length - 1) {
                 nextBtn.textContent = '提交試卷';
             } else {
@@ -356,26 +425,28 @@
             }
         }
         
-        function handleNextQuestion() {
-            if (userAnswers[currentQuestionIndex] === null) {
-                 const tempAlert = document.createElement('div');
-                tempAlert.textContent = '請選擇一個答案！';
-                tempAlert.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background-color: #ef4444; color: white; padding: 10px 20px; border-radius: 8px; z-index: 1000; transition: opacity 0.5s;';
-                document.body.appendChild(tempAlert);
-                setTimeout(() => {
-                    tempAlert.style.opacity = '0';
-                    setTimeout(() => tempAlert.remove(), 500);
-                }, 2000);
-                return;
-            }
-            
-            currentQuestionIndex++;
-            if (currentQuestionIndex < quizQuestions.length) {
-                displayQuestion();
-            } else {
-                processAndShowResults(false);
+        function handleNav(direction) {
+            const newIndex = currentQuestionIndex + direction;
+            if (newIndex >= 0 && newIndex < quizQuestions.length) {
+                goToQuestion(newIndex);
+            } else if (newIndex >= quizQuestions.length) {
+                // Confirm submission
+                if (confirm('您已答完最後一題，確定要提交試卷嗎？')) {
+                    processAndShowResults(false);
+                }
             }
         }
+        
+        function handleSubmit() {
+            if (currentQuestionIndex === quizQuestions.length - 1) {
+                if (confirm('您確定要提交試卷嗎？提交後將無法修改。')) {
+                    processAndShowResults(false);
+                }
+            } else {
+                handleNav(1);
+            }
+        }
+
 
         function processAndShowResults(timeUp = false) {
             clearInterval(timerInterval);
@@ -398,7 +469,7 @@
                 resultSubtitleEl.textContent = "";
             }
 
-            finalScoreEl.textContent = `${score} 分`;
+            finalScoreEl.textContent = `${score} / 100 分`;
 
             let message = '';
             if (score >= 90) {
@@ -463,7 +534,8 @@
 
         // Event Listeners
         startBtn.addEventListener('click', startQuiz);
-        nextBtn.addEventListener('click', handleNextQuestion);
+        prevBtn.addEventListener('click', () => handleNav(-1));
+        nextBtn.addEventListener('click', handleSubmit);
         restartBtn.addEventListener('click', restartQuiz);
 
     </script>
