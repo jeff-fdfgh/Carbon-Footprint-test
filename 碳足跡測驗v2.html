@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>產品碳足跡知識測驗 (終極專家版)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+        }
+        .option-btn.selected {
+            background-color: #3b82f6; /* bg-blue-600 */
+            color: white;
+            border-color: #3b82f6; /* border-blue-600 */
+        }
+        .option-btn.correct {
+            background-color: #22c55e; /* bg-green-500 */
+            color: white;
+            border-color: #22c55e; /* border-green-500 */
+        }
+        .option-btn.incorrect {
+            background-color: #ef4444; /* bg-red-500 */
+            color: white;
+            border-color: #ef4444; /* border-red-500 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <div id="quiz-container" class="w-full max-w-3xl mx-auto">
+        <!-- 開始畫面 -->
+        <div id="start-screen" class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-green-600 dark:text-green-400 mb-6">產品碳足跡知識測驗</h1>
+            <p class="text-gray-600 dark:text-gray-400 mb-6">本測驗旨在評估您對產品碳足跡核心標準與方法論的深度理解。測驗共60題，<strong class="text-red-500">限時90分鐘</strong>。</p>
+            <div class="flex justify-center space-x-4 mb-8 text-sm text-gray-500 dark:text-gray-400">
+                <span>簡易: 20題 (1分/題)</span>
+                <span>中等: 20題 (2分/題)</span>
+                <span>困難: 20題 (2分/題)</span>
+            </div>
+            <button id="start-btn" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-xl transition-transform transform hover:scale-105 shadow-lg">
+                開始測驗
+            </button>
+        </div>
+
+        <!-- 測驗畫面 -->
+        <div id="quiz-screen" class="hidden bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl">
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <p class="text-sm font-semibold text-green-600 dark:text-green-400">問題 <span id="question-number"></span> / 60</p>
+                    <div id="timer" class="text-lg font-bold text-red-500">90:00</div>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-green-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+            <div id="question-text" class="text-xl md:text-2xl font-bold mb-6 min-h-[6rem]"></div>
+            <div id="options-container" class="space-y-4"></div>
+            <button id="next-btn" class="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition-transform transform hover:scale-105 shadow-md">
+                下一題
+            </button>
+        </div>
+
+        <!-- 結果畫面 -->
+        <div id="result-screen" class="hidden bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl">
+            <h2 class="text-3xl font-bold text-center mb-2" id="result-title">測驗結束！</h2>
+            <p class="text-lg text-center text-gray-600 dark:text-gray-400 mb-4" id="result-subtitle"></p>
+            <p class="text-5xl font-bold text-center text-green-600 dark:text-green-400 mb-6" id="final-score"></p>
+            <p class="text-lg text-center text-gray-600 dark:text-gray-400 mb-8" id="score-message"></p>
+            
+            <div class="text-center mb-8">
+                <button id="restart-btn" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-xl transition-transform transform hover:scale-105 shadow-lg">
+                    再次測驗
+                </button>
+            </div>
+
+            <div id="answer-key-container">
+                <h3 class="text-2xl font-bold mb-4 border-b-2 border-gray-200 dark:border-gray-600 pb-2">答案詳解</h3>
+                <div id="answer-key" class="space-y-6 max-h-[50vh] overflow-y-auto pr-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questionBank = {
+            easy: [
+                // 易 (50題, 每題1分)
+                { question: "產品碳足跡(CFP)的核心定義是基於何種評估範疇？", options: ["A. 僅限製造階段的直接排放", "B. 涵蓋產品完整生命週期的溫室氣體總量", "C. 僅計算運輸與銷售的排放", "D. 組織年度的總體排放"], answer: "B", points: 1 },
+                { question: "生命週期評估(LCA)方法論的第一個 foundational 階段是什麼？", options: ["A. 盤查分析 (LCI)", "B. 衝擊評估 (LCIA)", "C. 目標與範疇界定 (Goal and Scope Definition)", "D. 闡釋 (Interpretation)"], answer: "C", points: 1 },
+                { question: "ISO 14067標準是專門為哪一類型的溫室氣體評估所制定？", options: ["A. 國家層級的排放清冊", "B. 企業組織的年度盤查", "C. 特定產品或服務的生命週期", "D. 減量專案的成效確證"], answer: "C", points: 1 },
+                { question: "「搖籃到大門(Cradle-to-Gate)」的系統邊界，其終點被定義在何處？", options: ["A. 原料供應商的門口", "B. 產品完成製造，離開工廠大門之時", "C. 產品送達零售商時", "D. 消費者購買產品時"], answer: "B", points: 1 },
+                { question: "碳排放量的核心計算公式為下列何者？", options: ["A. 活動數據 + 排放係數", "B. 活動數據 × 排放係數", "C. 活動數據 ÷ 排放係數", "D. 排放係數 ÷ 活動數據"], answer: "B", points: 1 },
+                { question: "全球最早提出產品碳標籤概念並付諸實踐的國家是？", options: ["A. 德國", "B. 日本", "C. 英國", "D. 美國"], answer: "C", points: 1 },
+                { question: "在LCA中，直接從研究對象的製程中量測或收集而來的數據，被歸類為？", options: ["A. 二級數據 (Secondary Data)", "B. 代理數據 (Proxy Data)", "C. 一級數據 (Primary Data)", "D. 假設數據 (Assumed Data)"], answer: "C", points: 1 },
+                { question: "我國負責推動與管理產品碳足跡標籤制度的中央主管機關是？", options: ["A. 經濟部產業發展署", "B. 數位發展部", "C. 環境部", "D. 國家發展委員會"], answer: "C", points: 1 },
+                { question: "下列何者並非ISO 14067所規範的產品生命週期階段？", options: ["A. 原料取得", "B. 製造", "C. 企業的財務規劃", "D. 廢棄處理"], answer: "C", points: 1 },
+                { question: "在LCA中，用以提供一個量化、可比較的功能性產出基準，此一重要定義稱之為？", options: ["A. 參考流 (Reference Flow)", "B. 功能單位 (Functional Unit)", "C. 系統邊界 (System Boundary)", "D. 單元製程 (Unit Process)"], answer: "B", points: 1 },
+                { question: "歐盟為應對「碳洩漏」問題而提出的邊境管制措施，其廣為人知的縮寫是？", options: ["A. GDPR", "B. REACH", "C. CBAM", "D. ETS"], answer: "C", points: 1 },
+                { question: "ISO 14064-1標準提供了哪一類型的溫室氣體盤查框架？", options: ["A. 針對單一產品", "B. 針對一個組織或公司", "C. 針對一個減量專案", "D. 針對一個城市"], answer: "B", points: 1 },
+                { question: "在LCA中，引用自公開資料庫、學術文獻或政府報告的排放係數，屬於何種類型的數據？", options: ["A. 一級數據", "B. 二級數據", "C. 特定場址數據", "D. 即時數據"], answer: "B", points: 1 },
+                { question: "我國產品碳足跡標籤的設計，以腳印結合心形與綠葉，主要傳達的核心理念是？", options: ["A. 鼓勵多走路有益健康", "B. 企業獲利至上", "C. 以愛護地球的心，踏出減碳的每一步", "D. 產品行銷全球的足跡"], answer: "C", points: 1 },
+                { question: "「搖籃到墳墓(Cradle-to-Grave)」的評估範疇，其涵蓋的終點是？", options: ["A. 產品送達消費者手中", "B. 產品保固期結束", "C. 產品使用壽命終結後的廢棄處理與最終處置", "D. 產品進入二手市場"], answer: "C", points: 1 },
+                { question: "PAS 2050這份早期重要的碳足跡規範，是由哪個國家的標準機構所發布？", options: ["A. 德國 (DIN)", "B. 法國 (AFNOR)", "C. 英國 (BSI)", "D. 美國 (ANSI)"], answer: "C", points: 1 },
+                { question: "生命週期衝擊評估(LCIA)流程中，將盤查清單中的各種污染物歸入其對應的環境衝擊類別(如全球暖化、酸化)，此步驟稱為？", options: ["A. 特徵化", "B. 分類", "C. 標準化", "D. 評價"], answer: "B", points: 1 },
+                { question: "企業執行產品碳足跡盤查後，最直接的內部管理效益為何？", options: ["A. 保證能獲得政府標案", "B. 透過數據分析鑑別出供應鏈與製程中的「排碳熱點」，作為減量改善的依據", "C. 可立即免除所有環境法規的管制", "D. 企業知名度必然提升"], answer: "B", points: 1 },
+                { question: "在眾多溫室氣體中，何者是全球暖化潛勢(GWP)的計算基準，其GWP值被定義為1？", options: ["A. 甲烷 (CH4)", "B. 氧化亞氮 (N2O)", "C. 二氧化碳 (CO2)", "D. 六氟化硫 (SF6)"], answer: "C", points: 1 },
+                { question: "企業在申請我國碳足跡標籤前，若無現成的產品類別規則(PCR)可供遵循，應如何進行？", options: ["A. 放棄申請", "B. 自行決定計算規則", "C. 依循主管機關指引，發起或參與新PCR的制定", "D. 借用其他不相關產品的PCR"], answer: "C", points: 1 },
+                { question: "「生命週期思維(Life Cycle Thinking)」的核心價值在於預防下列何種情況？", options: ["A. 產品設計不美觀", "B. 解決了A階段的污染，卻在B階段製造出更嚴重的污染，造成衝擊轉移", "C. 產品庫存過多", "D. 財務報表不平衡"], answer: "B", points: 1 },
+                { question: "在LCA的盤查分析(LCI)階段，其最終產出的是一份什麼樣的清單？", options: ["A. 產品的優缺點清單", "B. 關於產品系統，所有輸入與輸出的物質和能源流量的量化清單", "C. 建議的產品售價清單", "D. 參與研究的人員名單"], answer: "B", points: 1 },
+                { question: "我國的「減碳標籤」與「碳足跡標籤」的關係為何？", options: ["A. 兩者為相同標籤", "B. 必須先取得碳足跡標籤作為基準，再達成減量目標後才能申請減碳標籤", "C. 兩者為互斥關係，只能擇一申請", "D. 減碳標籤是碳足跡標籤的草稿版本"], answer: "B", points: 1 },
+                { question: "ISO 14060系列標準旨在為溫室氣體領域提供一套共同的語言與框架，其主要目的是？", options: ["A. 增加企業的營運成本", "B. 提升溫室氣體量化、報告與查證的可信度、一致性與透明度", "C. 限制國際貿易", "D. 統一全球的能源價格"], answer: "B", points: 1 },
+                { question: "在碳足跡計算公式中，「活動數據」指的是什麼？", options: ["A. 單位活動的排放強度", "B. 導致溫室氣體排放的活動規模的量化值(如用電量、燃料消耗量)", "C. IPCC的官方報告", "D. 產品的市場活動"], answer: "B", points: 1 },
+                { question: "在碳足跡計算公式中，「排放係數」指的是什麼？", options: ["A. 企業的總排放量", "B. 單位活動數據所產生的溫室氣體排放量", "C. 產品的生產數量", "D. 運輸的總公里數"], answer: "B", points: 1 },
+                { question: "宣告「碳中和(Carbon Neutrality)」的基礎步驟，通常不包含下列何者？", options: ["A. 依標準量化碳足跡", "B. 制定並執行減量計畫", "C. 購買等量碳權進行抵換", "D. 將產品全面改為綠色包裝"], answer: "D", points: 1 },
+                { question: "LCA的「闡釋(Interpretation)」階段，其產出應直接服務於哪個階段所設定的目標？", options: ["A. 盤查分析階段", "B. 衝擊評估階段", "C. 目標與範疇界定階段", "D. 數據收集階段"], answer: "C", points: 1 },
+                { question: "下列何者通常不被視為產品生命週期中的一個獨立階段？", options: ["A. 原料取得", "B. 產品設計與研發", "C. 配送銷售", "D. 使用"], answer: "B", points: 1 },
+                { question: "英國的Carbon Trust在推動碳標籤初期，其資金來源主要為何？", options: ["A. 全球企業聯合捐款", "B. 由英國政府出資成立", "C. 透過群眾募資", "D. 透過發行加密貨幣"], answer: "B", points: 1 },
+                { question: "在LCA中，劃定「系統邊界(System Boundary)」的目的是？", options: ["A. 方便繪製流程圖", "B. 清晰界定哪些過程應被納入評估，哪些則被排除在外", "C. 為了計算工廠的佔地面積", "D. 這是LCA軟體的自動功能"], answer: "B", points: 1 },
+                { question: "「二氧化碳當量(CO2e)」這個單位為何被使用？", options: ["A. 因為二氧化碳是唯一重要的溫室氣體", "B. 為了將不同溫室氣體(如甲烷、氧化亞氮)的暖化效應，轉換為一個可比較的共同單位", "C. 因為這個單位聽起來比較專業", "D. 這是法律規定的唯一計量單位"], answer: "B", points: 1 },
+                { question: "企業投入資源進行產品碳足跡盤查，除了外部壓力，其內在驅動力通常是？", options: ["A. 財務部門要求", "B. 透過科學化管理，尋求營運效率提升與成本降低的機會", "C. 資訊部門要求更新系統", "D. 僅為了符合潮流"], answer: "B", points: 1 },
+                { question: "ISO 14040標準的核心內容是？", options: ["A. LCA的具體計算公式", "B. LCA的原則與框架(Principles and framework)", "C. 各國的排放係數列表", "D. LCA查證員的資格要求"], answer: "B", points: 1 },
+                { question: "ISO 14044標準的核心內容是？", options: ["A. LCA的歷史發展", "B. LCA的要求與指引(Requirements and guidelines)", "C. 全球暖化的科學證據", "D. 產品類別規則的範本"], answer: "B", points: 1 },
+                { question: "全球暖化潛勢(GWP)值越高的氣體，代表什麼？", options: ["A. 該氣體在大氣中濃度最高", "B. 在相同質量下，其捕捉熱能造成暖化的能力相對於CO2更強", "C. 該氣體對人體毒性最強", "D. 該氣體最容易被測量"], answer: "B", points: 1 },
+                { question: "在LCA中，比較A、B兩種洗衣粉時，下列何者是較佳的功能單位？", options: ["A. 一公斤的洗衣粉", "B. 清洗10公斤標準髒污程度的棉質衣物，並達到特定潔淨度", "C. 一盒洗衣粉", "D. 一卡車的洗衣粉"], answer: "B", points: 1 },
+                { question: "下列何者為「二級數據(Secondary Data)」？", options: ["A. 透過磅秤量測的工廠原料使用量", "B. 從LCA軟體內建的Ecoinvent資料庫中選用的鋼鐵生產排放係數", "C. 透過電表讀取的實際用電量", "D. 透過流量計量測的廢水排放量"], answer: "B", points: 1 },
+                { question: "在LCA中，允許在盤查時忽略對總體衝擊貢獻極小的流程，此規則稱之為？", options: ["A. 80/20法則", "B. 截斷準則(Cut-off criteria)", "C. 四捨五入原則", "D. 自由心證原則"], answer: "B", points: 1 },
+                { question: "組織溫室氣體盤查(ISO 14064-1)的對象是？", options: ["A. 一項產品", "B. 一個組織的營運邊界", "C. 一個國家的領土", "D. 一個家庭"], answer: "B", points: 1 },
+                { question: "PAS 2060這份廣受採用的標準，是針對何種宣告提供規範？", options: ["A. 產品的有機認證", "B. 企業的社會責任報告", "C. 達成「碳中和」的宣告", "D. 產品的專利申請"], answer: "C", points: 1 },
+                { question: "我國的產品碳足跡標籤上，標示的數值代表什麼？", options: ["A. 產品的建議售價", "B. 產品的重量", "C. 該產品功能單位的生命週期溫室氣體排放量", "D. 該產品的生產批號"], answer: "C", points: 1 },
+                { question: "在循環經濟模型中，「逆物流(Reverse Logistics)」扮演的關鍵角色是？", options: ["A. 將產品快速送到消費者手中", "B. 建立產品與物料從消費端回到生產端的回收與再利用管道", "C. 降低運輸成本", "D. 處理客戶投訴"], answer: "B", points: 1 },
+                { question: "韓國的EPD(環境產品宣告)制度相較於單純的碳標籤，其主要特點是？", options: ["A. 計算更快速", "B. 揭露了包含碳足跡在內的多項環境衝擊潛勢，資訊更全面", "C. 標籤顏色更鮮豔", "D. 僅適用於電子產品"], answer: "B", points: 1 },
+                { question: "為何LCA研究報告的透明度與方法學揭露如此重要？", options: ["A. 為了增加報告的頁數", "B. 為了讓第三方能夠評估其研究的可靠性、可信度與可重現性", "C. 這是法律規定的最低字數要求", "D. 為了展示公司的寫作能力"], answer: "B", points: 1 },
+                { question: "在LCA中，當一個單元製程同時產出多個有用的產品時，必須進行的步驟是？", options: ["A. 忽略其中一個產品", "B. 分配(Allocation)", "C. 重新設計製程", "D. 提高產品售價"], answer: "B", points: 1 },
+                { question: "下列何者不屬於LCA中常見的環境衝擊類別？", options: ["A. 全球暖化潛勢", "B. 酸化潛勢", "C. 員工滿意度指數", "D. 優養化潛勢"], answer: "C", points: 1 },
+                { question: "企業盤查碳足跡後，若發現運輸是排碳熱點，最直接的改善措施是？", options: ["A. 更換產品包裝", "B. 優化物流路徑、提高載運效率或改用低碳運輸工具", "C. 增加廣告預算", "D. 給司機加薪"], answer: "B", points: 1 },
+                { question: "「產品類別規則(PCR)」在LCA領域中扮演的角色類似於？", options: ["A. 產品的說明書", "B. 財務報表的會計準則", "C. 公司的內部規章", "D. 產品的廣告文案"], answer: "B", points: 1 },
+                { question: "一份碳足跡報告的數值，其可信度主要取決於？", options: ["A. 報告的印刷精美程度", "B. 所用數據的品質、假設的合理性以及計算過程的透明度", "C. 執行長的知名度", "D. 產品的市場佔有率"], answer: "B", points: 1 }
+            ],
+            medium: [
+                // 中等 (50題, 每題2分)
+                { question: "在處理一個同時產出電力與熱的汽電共生廠時，若要將環境負荷分配給電力與熱，根據ISO 14044的分配層級，下列何種方法應被優先考慮？", options: ["A. 經濟價值分配法，因電力與熱的市場價格不同", "B. 避免分配，例如透過系統擴張，分析該系統替代了多少來自電網的電力與來自鍋爐的熱", "C. 質量分配法，將負荷依電力與熱的質量(通常為零)分配", "D. 將所有負荷都歸於價值較高的電力"], answer: "B", points: 2 },
+                { question: "一份CFP研究若要提出「本產品A的碳足跡低於市場平均水平」的比較性宣告，下列何者不是其必須滿足的條件？", options: ["A. 必須清楚定義比較的市場與產品類別", "B. 必須採用與計算市場平均值時一致的方法論與PCR", "C. 必須經過獨立的第三方關鍵性審查", "D. 產品A的售價必須低於市場平均"], answer: "D", points: 2 },
+                { question: "在LCA中，使用「代理數據(Proxy Data)」時，研究者應採取的最佳實務是？", options: ["A. 直接使用，不需在報告中特別說明", "B. 選擇一個性質最接近的數據，並在報告中說明其選擇理由與此替代可能帶來的不確定性", "C. 選擇一個排放係數最低的代理數據，以美化結果", "D. 要求查證公司提供一個認可的代理數據"], answer: "B", points: 2 },
+                { question: "當一個產品的生命週期包含生物源材料(bio-based material)時，其碳足跡計算應如何考慮其生長過程吸收的CO2？", options: ["A. 完全不予計算，因為最終會釋放回大氣", "B. 應在原料取得階段視為暫時性的碳移除(負排放)，並在後續階段說明其釋放情況", "C. 僅在產品是永久性建材時才可視為負排放", "D. 直接將產品總重乘以一個固定係數"], answer: "B", points: 2 },
+                { question: "若比較「玻璃瓶裝飲料」與「鋁罐裝飲料」的碳足跡，下列哪個因素最可能對比較結果產生決定性影響？", options: ["A. 飲料本身的配方", "B. 瓶身與罐身的回收率，以及再生材料與原生材料生產時的巨大能源差異", "C. 標籤的印刷油墨", "D. 零售店的空調耗電"], answer: "B", points: 2 },
+                { question: "根據ISO 14067，企業購買的「碳抵銷(Carbon Offsets)」額度，應如何於產品碳足跡報告中呈現？", options: ["A. 可直接從計算出的碳足跡總量中扣除，得到一個較低的數值", "B. 應與產品碳足跡分開報告，作為補充資訊，不可直接扣減", "C. 僅能在報告的封面進行標示", "D. 標準禁止在報告中提及碳抵銷"], answer: "B", points: 2 },
+                { question: "在LCA衝擊評估中，「標準化(Normalization)」步驟的目的為何？", options: ["A. 將所有衝擊類別的單位統一", "B. 將各衝擊類別的結果與一個參考值(如區域人均年排放)相除，以了解其相對貢獻的量級", "C. 驗證盤查數據的準確性", "D. 賦予不同衝擊類別權重"], answer: "B", points: 2 },
+                { question: "若一個CFP研究發現，其結果對於所選用的「電力排放係數」(市場基礎vs.位置基礎)非常敏感，這代表什麼？", options: ["A. 計算錯誤，應重新盤查", "B. 電力消耗是該產品生命週期的主要排碳熱點，電力來源的選擇對結果有重大影響", "C. 該產品不應該使用電力", "D. 應忽略電力消耗的計算"], answer: "B", points: 2 },
+                { question: "ISO 14064-3作為查證指引，其核心是基於「風險導向」的查證方法，這意味著查證員會？", options: ["A. 將所有時間平均分配給每一個數據點", "B. 優先將查證資源投入在最可能發生重大錯報或不實陳述的環節", "C. 只查證看起來有問題的部分", "D. 避免所有有風險的查證項目"], answer: "B", points: 2 },
+                { question: "在推動供應鏈減碳時，核心企業(品牌商)面臨的最大挑戰通常是什麼？", options: ["A. 自身工廠的能源效率", "B. 對於上游(Tier 2, Tier 3)供應商的數據可視性不足與影響力有限", "C. 產品的包裝設計", "D. 公司網站的伺服器耗電"], answer: "B", points: 2 },
+                { question: "若一個產品的包裝在廢棄階段，一部分被回收再製成同級產品(封閉循環)，一部分被降級再製成其他產品(開放循環)，LCA模型應如何處理？", options: ["A. 統一採用截斷法處理", "B. 應分別為兩種回收路徑建立不同的模型(如封閉循環法、避免負擔法)並依比例加總", "C. 只計算封閉循環的部分，因為品質較高", "D. 將兩種回收的平均效益計入"], answer: "B", points: 2 },
+                { question: "「環境產品宣告(EPD)」與「碳足跡標籤」在溝通目的上有何差異？", options: ["A. EPD主要用於B2B溝通，提供詳盡的多面向環境數據；碳標籤則多用於B2C溝通，提供簡潔的單一指標", "B. EPD僅能用於行銷，碳標籤僅能用於研發", "C. 兩者沒有差異", "D. EPD是強制性的，碳標籤是自願性的"], answer: "A", points: 2 },
+                { question: "在CFP研究中，若一個產品的「使用階段」碳排放佔總量的70%，這對減碳策略有何啟示？", options: ["A. 應專注於改善製造階段的效率", "B. 產品的能源效率或使用模式是減碳的關鍵槓桿點，應優先投入研發資源", "C. 應將產品售價提高70%", "D. 顯示原料取得階段的碳排控制得很好"], answer: "B", points: 2 },
+                { question: "下列關於「數據品質評估(DQR)」的敘述，何者更為精確？", options: ["A. 只要數據來自一級量測，其品質就必定是完美的", "B. DQR是一個半定量的評估工具，旨在系統性地評估數據的代表性與不確定性，以增加報告的透明度", "C. DQR的主要目的是為了增加查證的費用", "D. 不同的LCA軟體有完全不同的DQR評估方法，結果無法比較"], answer: "B", points: 2 },
+                { question: "ISO 14067對於產品生命週期中「資本財(Capital Goods)」(如廠房、機器設備)的排放，建議如何處理？", options: ["A. 應將其整個生命週期的排放，透過折舊或使用年限等方式，分配攤提至單位產品上", "B. 因計算複雜，通常可被排除在系統邊界外", "C. 僅需計算其日常維修的排放", "D. 資本財的排放應由製造商負責，與產品使用者無關"], answer: "A", points: 2 },
+                { question: "在進行CFP盤查時，若發現某項原物料的投入量僅佔總質量的0.1%，但其LCI數據顯示為高衝擊材料，此時應如何處理？", options: ["A. 根據質量百分比，直接使用截斷準則將其忽略", "B. 應同時考量其質量、能源與環境關聯性，不可僅因質量小就忽略高衝擊物質", "C. 將其排放量乘以0.1後再計入", "D. 要求供應商更換此原料"], answer: "B", points: 2 },
+                { question: "在LCA中，處理回收材料時，採用「截斷法(Cut-off Approach)」或稱為「100-0分配法」，其核心假設是什麼？", options: ["A. 回收的效益完全歸於下一個使用再生料的產品系統", "B. 回收的效益完全歸於產生廢料的原始產品系統", "C. 回收過程沒有任何環境衝擊", "D. 再生材料與原生材料的品質完全相同"], answer: "A", points: 2 },
+                { question: "一個LCA研究的「目標與範疇界定」階段，為何至關重要？", options: ["A. 因為此階段決定了整個研究的方向、深度、邊界與最終結果的可用性", "B. 因為這是最容易完成的階段", "C. 因為報告的緒論需要寫這部分內容", "D. 因為查證員只看這個階段的報告"], answer: "A", points: 2 },
+                { question: "若一家公司想宣告其某項服務達成「碳中和」，根據PAS 2060，其購買的碳權(offsets)必須滿足什麼條件？", options: ["A. 必須是市場上最便宜的", "B. 必須來自真實、額外、可驗證且永久的減量專案，並透過可信的登錄系統發行", "C. 必須來自公司內部的減量專案", "D. 必須是未來年份的碳權"], answer: "B", points: 2 },
+                { question: "在CFP計算中，處理「運輸」排放時，若一批貨物未滿載(Less than Truckload)，應如何考慮其排放？", options: ["A. 仍以滿載卡車的總排放計算", "B. 應將卡車的總排放，按該批貨物的重量或體積佔比進行分配", "C. 不需計算，因為不是專車", "D. 僅計算貨物本身的重量"], answer: "B", points: 2 },
+                { question: "在LCA中，將不同環境衝擊指標(如酸化、優養化)賦予權重，以得到單一環境分數，這個步驟稱為什麼？", options: ["A. 分類(Classification)", "B. 特徵化(Characterization)", "C. 標準化(Normalization)", "D. 加權(Weighting)"], answer: "D", points: 2 },
+                { question: "在LCA中，當處理一個包含多種材料的複雜產品時，首要工作是什麼？", options: ["A. 立即開始尋找排放係數", "B. 建立產品的物料清單(Bill of Materials, BOM)並繪製製程流程圖", "C. 估算產品的最終售價", "D. 設計產品的回收方式"], answer: "B", points: 2 },
+                { question: "在CFP研究中，若電力來自企業自建的太陽能光電板，其發電過程的溫室氣體排放應如何計算？", options: ["A. 視為零排放", "B. 應計算製造、安裝、維護及最終廢棄太陽能板的整個生命週期排放，再攤提到每度電上", "C. 等同於當地電網的平均排放", "D. 僅計算維護時的交通排放"], answer: "B", points: 2 },
+                { question: "在處理土地利用變遷(LUC)的排放時，直接LUC與間接LUC(iLUC)的主要區別為何？", options: ["A. 前者發生在國內，後者發生在國外", "B. 前者指為種植原料而直接改變一塊土地的用途，後者指因市場需求轉移導致其他地方發生土地利用改變", "C. 前者容易計算，後者無法計算", "D. 兩者沒有區別"], answer: "B", points: 2 },
+                { question: "在LCA中，為何要進行「數據品質評估」？", options: ["A. 為了讓報告看起來更專業", "B. 為了了解盤查數據的不確定性程度，並增加結果的透明度與可信度", "C. 這是查證公司額外收費的項目", "D. 為了篩選掉所有二級數據"], answer: "B", points: 2 },
+                { question: "在CFP研究中，若要將研究結果與前一年度的數據進行比較以追蹤減碳績效，最重要的前提是什麼？", options: ["A. 兩次研究必須由同一個人執行", "B. 兩次研究的方法論、系統邊界、功能單位與數據來源等假設基礎必須一致", "C. 產品的售價必須維持不變", "D. 必須更換查證公司"], answer: "B", points: 2 },
+                { question: "下列何者是LCA方法論的主要限制？", options: ["A. 無法評估過去的環境衝擊", "B. 對於未來技術發展或消費者行為等情境的假設，具有高度不確定性", "C. 僅適用於電子產品", "D. 計算結果與實際情況完全沒有關聯"], answer: "B", points: 2 },
+                { question: "企業在設定其「科學基礎減碳目標(SBT)」時，其目標的企圖心應與下列何者對齊？", options: ["A. 公司過去的平均減碳率", "B. 同業的平均減碳目標", "C. 《巴黎協定》將全球升溫控制在遠低於2°C或1.5°C的目標路徑", "D. 公司當年度的獲利目標"], answer: "C", points: 2 },
+                { question: "在LCA中，若一項活動數據的變異性很大(例如，回收率在10%到80%之間)，在分析時應如何處理？", options: ["A. 取最大值進行計算", "B. 取最小值進行計算", "C. 取平均值計算，並在敏感度分析中測試最大值與最小值的影響", "D. 忽略此項數據"], answer: "C", points: 2 },
+                { question: "為何「產品類別規則(PCR)」需要定期審查與更新？", options: ["A. 為了讓制定單位有持續的收入", "B. 因為相關的生產技術、市場情況、LCA方法學與數據可能已經改變", "C. 因為舊版的PCR檔案格式不相容", "D. 這是法律的隨機要求"], answer: "B", points: 2 },
+                { question: "在CFP報告中，揭露所使用的LCA軟體與資料庫版本為何重要？", options: ["A. 為了幫軟體公司打廣告", "B. 因為不同軟體或資料庫版本可能包含不同的計算模型與排放係數，影響結果的可重現性", "C. 這是不必要的資訊", "D. 為了證明公司有足夠的預算"], answer: "B", points: 2 },
+                { question: "若一個產品在使用階段完全不消耗能源(例如一把椅子)，其使用階段的碳足跡為何？", options: ["A. 必然為零", "B. 仍需考慮其維護、清潔等可能產生排放的活動", "C. 等同於製造階段的排放", "D. 無法計算"], answer: "B", points: 2 },
+                { question: "在進行第三方查證時，查證員的主要職責是什麼？", options: ["A. 協助企業重新計算碳足跡", "B. 根據標準，對企業提出的碳足跡報告與數據進行獨立、客觀的評估並提出意見", "C. 保證企業的產品一定能通過標籤申請", "D. 為企業制定未來的減碳計畫"], answer: "B", points: 2 },
+                { question: "下列關於ISO 14067與PAS 2050的比較，何者正確？", options: ["A. PAS 2050是比ISO 14067更新的標準", "B. ISO 14067在制定過程中參考了PAS 2050，並更強調與ISO 14040/44的連結", "C. 兩者在計算方法上完全沒有任何共通之處", "D. PAS 2050是強制性法規，ISO 14067是自願性標準"], answer: "B", points: 2 },
+                { question: "若一家公司僅完成了「搖籃到大門」的產品碳足跡計算，它可以對外宣告其產品為「低碳產品」嗎？", options: ["A. 可以，因為已經計算了最重要的部分", "B. 不行，因為未包含使用與廢棄階段，可能產生誤導", "C. 可以，但必須清楚標示其計算範疇為「搖籃到大門」", "D. 僅能在公司內部宣告"], answer: "C", points: 2 },
+                { question: "下列哪項最能體現「循環經濟」原則在產品碳足跡中的影響？", options: ["A. 僅使用一次性包材", "B. 透過產品設計使其易於維修、拆解與回收，從而減少廢棄階段的衝擊與對原生資源的需求", "C. 將所有廢棄物都送去焚化", "D. 盡可能將產品賣到最遠的地方"], answer: "B", points: 2 },
+                { question: "在進行CFP盤查時，化糞池處理員工生活污水所產生的甲烷(CH4)排放，應否計入？", options: ["A. 不用，因為量很少", "B. 不用，這是員工的個人行為", "C. 應計入，這屬於製造階段的逸散排放之一", "D. 僅在員工人數超過1000人時才需計算"], answer: "C", points: 2 },
+                { question: "法國的「環境標籤」制度，其評分(A到E)是如何產生的？", options: ["A. 由消費者投票決定", "B. 根據產品的LCA結果，與同類產品的平均表現進行比較後得出", "C. 根據產品的售價決定，越貴分越高", "D. 由廠商自行決定宣告的等級"], answer: "B", points: 2 },
+                { question: "在LCA中，處理回收材料時，若採用「50/50分配法」，其意涵為何？", options: ["A. 回收率必須是50%", "B. 將回收再製的環境負荷與效益，在產生廢料的舊產品系統與使用回收料的新產品系統之間平均分配", "C. 只有50%的產品可以回收", "D. 計算成本可以減少50%"], answer: "B", points: 2 },
+                { question: "在比較不同產品的碳足跡時，若兩者的「功能單位」定義不同，會產生什麼問題？", options: ["A. 沒有任何問題，可以直接比較數值大小", "B. 會讓計算過程更簡單", "C. 比較結果將失去意義，如同比較蘋果與橘子", "D. 碳足跡數值會自動校正"], answer: "C", points: 2 },
+                { question: "ISO/TS 14027 作為PCR的制定指引，其目的是什麼？", options: ["A. 統一全球所有產品的PCR內容", "B. 提供一個透明、可信的程序來制定與審查PCR，確保其品質與一致性", "C. 限制PCR的數量", "D. 讓制定PCR的過程更快速"], answer: "B", points: 2 },
+                { question: "在LCA中，若一個產品系統的邊界劃得太小，可能會導致什麼問題？", options: ["A. 計算結果過於複雜", "B. 可能遺漏了重要的上游或下游排放源，低估了產品的總體衝擊", "C. 會大幅增加計算成本", "D. 查證過程會變得非常困難"], answer: "B", points: 2 },
+                { question: "下列何者是「一級數據」相較於「二級數據」的主要優點？", options: ["A. 永遠是免費的", "B. 數據的特定性(specificity)與代表性更高，更能反映研究對象的實際情況", "C. 不需要經過查證", "D. 數據量通常比較小"], answer: "B", points: 2 },
+                { question: "在CFP研究中，若一個單元製程的數據難以取得，下列何種作法最不恰當？", options: ["A. 參考文獻，尋找相似製程的數據作為替代", "B. 進行工程估算或質量平衡計算", "C. 在報告中說明此數據缺口與其可能影響", "D. 自行編造一個看起來合理的數據"], answer: "D", points: 2 },
+                { question: "我國「環境部推動產品碳足跡管理要點」中，對於申請標籤的查證，要求必須達到何種保證等級？", options: ["A. 有限保證等級(Limited Assurance)", "B. 合理保證等級(Reasonable Assurance)", "C. 絕對保證等級(Absolute Assurance)", "D. 自我宣告等級(Self-declaration)"], answer: "B", points: 2 },
+                { question: "一個LCA研究的結論是「A產品的碳足跡是B產品的兩倍」，這樣的結論有何潛在問題？", options: ["A. 沒有問題，結論非常清晰", "B. 應說明比較的基礎，例如是否使用相同的功能單位、系統邊界與方法論", "C. 應將結果改為A產品比較貴", "D. 應附上兩種產品的照片"], answer: "B", points: 2 },
+                { question: "在LCA中，當處理一個包含多種材料的複雜產品時，首要工作是什麼？", options: ["A. 立即開始尋找排放係數", "B. 建立產品的物料清單(Bill of Materials, BOM)並繪製製程流程圖", "C. 估算產品的最終售價", "D. 設計產品的回收方式"], answer: "B", points: 2 },
+                { question: "在CFP研究中，若電力來自企業自建的太陽能光電板，其發電過程的溫室氣體排放應如何計算？", options: ["A. 視為零排放", "B. 應計算製造、安裝、維護及最終廢棄太陽能板的整個生命週期排放，再攤提到每度電上", "C. 等同於當地電網的平均排放", "D. 僅計算維護時的交通排放"], answer: "B", points: 2 }
+            ],
+            hard: [
+                // 困難 (50題, 每題2分)
+                { question: "在處理多功能性問題時，若因數據限制無法進行系統擴張，且物理關係(如質量)與產品間的環境負荷驅動機制不符，ISO 14044建議的下一步驟為何？", options: ["A. 必須停止研究", "B. 應採用其他關係(如經濟價值)進行分配，並在報告中充分證明其合理性與局限性", "C. 可自行發明一種新的分配方法", "D. 將所有環境負荷歸於經濟價值最高的產品"], answer: "B", points: 2 },
+                { question: "一份宣稱符合ISO 14067的CFP研究，若其結果要用於B2B溝通，且未對外公開比較，是否仍需進行關鍵性審查？", options: ["A. 是，所有符合標準的研究都必須進行", "B. 否，僅在公開宣告或比較時才強制要求", "C. 標準未強制，但客戶可能會要求進行以增加可信度", "D. 僅需內部審查即可"], answer: "C", points: 2 },
+                { question: "在評估土地利用變遷(LUC)時，間接土地利用變遷(iLUC)的計算為何充滿挑戰與爭議？", options: ["A. 因為iLUC的影響非常微小，可以忽略", "B. 因為其因果鏈複雜，涉及全球市場替代效應，模型與假設的不確定性極高", "C. 因為缺乏衛星影像數據", "D. 因為iLUC只發生在特定國家"], answer: "B", points: 2 },
+                { question: "當一個產品的生命週期包含一個封閉式回收循環(closed-loop recycling)時，計算其碳足跡時應如何處理回收材料的投入？", options: ["A. 將回收材料的環境負荷視為零", "B. 應將回收過程(收集、再處理)的環境負荷，以及因回收而減少的原生材料生產所「避免的衝擊」一併納入模型", "C. 其處理方式與開放式循環完全相同", "D. 僅計算回收過程的運輸排放"], answer: "B", points: 2 },
+                { question: "在LCA中，選擇不同的衝擊評估方法(LCIA method)，例如ReCiPe或IMPACT World+，可能會對下列哪個結果產生最顯著的影響？", options: ["A. 盤查清單中的原始數據(LCI)", "B. 功能單位的定義", "C. 各環境衝擊類別(如酸化、優養化)的量化結果與相對重要性", "D. 系統邊界的劃定"], answer: "C", points: 2 },
+                { question: "若一家公司同時生產化學品A(高價值)與副產品B(低價值廢酸)，若採用經濟價值分配法，可能會導致什麼潛在問題？", options: ["A. 大部分的環境負荷會被分配到副產品B，扭曲其真實衝擊", "B. 這種方法最為公平，沒有任何問題", "C. 計算過程會變得非常簡單", "D. 大部分的環境負荷會被分配到產品A，可能低估了廢酸處理的真實環境成本"], answer: "D", points: 2 },
+                { question: "在CFP研究中，時間邊界(Temporal Boundary)的設定為何重要？", options: ["A. 僅是為了報告格式要求", "B. 為了確保所收集的活動數據與所使用的排放係數，在時間上具有一致性與代表性", "C. 為了決定研究需要花費多長時間", "D. 為了配合查證員的行程"], answer: "B", points: 2 },
+                { question: "根據ISO 14067，若產品在使用階段會產生溫室氣體排放(如燃料車)，但其排放量高度取決於不可預測的消費者行為，研究者應如何處理？", options: ["A. 忽略使用階段，因為無法準確計算", "B. 應建立一個或多個標準化的使用情境(scenario)，並清楚說明其假設基礎與限制", "C. 僅計算其理論上的最低排放量", "D. 要求所有消費者回報其使用數據"], answer: "B", points: 2 },
+                { question: "在進行查證時，查證員如何評估一家公司所選用的二級數據是否恰當？", options: ["A. 只要是來自知名LCA軟體即可", "B. 評估其數據品質指標(DQR)，檢視其技術、地理、時間的相關性是否符合研究範疇", "C. 僅確認數據是否為免費", "D. 只要公司能提供數據來源連結即可"], answer: "B", points: 2 },
+                { question: "「搖籃到搖籃(Cradle-to-Cradle)」的設計理念，對傳統LCA的「廢棄階段」提出了何種挑戰？", options: ["A. 廢棄階段變得更不重要", "B. 傳統的「廢棄」概念被「回到循環」所取代，需評估材料進入生物或工業循環的效益與衝擊", "C. 使廢棄階段的計算變得更簡單", "D. 證明所有產品都無法回收"], answer: "B", points: 2 },
+                { question: "在LCA中，何謂「截斷誤差(Truncation Error)」？", options: ["A. 因使用截斷準則而忽略的累積排放所造成的誤差", "B. 計算機的浮點數運算誤差", "C. 人工輸入數據時的打字錯誤", "D. 查證員在報告中發現的錯誤"], answer: "A", points: 2 },
+                { question: "若比較「本地生產、卡車運輸」的蘋果與「國外進口、貨船運輸」的蘋果，下列何者是可能影響最終碳足跡比較結果的關鍵因素？", options: ["A. 蘋果的顏色", "B. 兩種運輸方式的單位噸公里排放係數差異，以及農業生產階段(用肥、用藥、灌溉)的差異", "C. 本地司機與外國船員的薪資", "D. 兩種蘋果的售價"], answer: "B", points: 2 },
+                { question: "在處理電力消耗時，若企業同時購買了電網的混合電力與可再生能源憑證(RECs)，在計算碳足跡時應如何處理？", options: ["A. 可以直接將對應電量視為零排放", "B. 應根據憑證的類型與相關規範(如GHG Protocol Scope 2 Guidance)，確認是否能合法宣告使用綠電並採用較低的排放係數", "C. 憑證僅為行銷工具，計算時仍須使用電網平均係數", "D. 將憑證的購買成本計入總排放"], answer: "B", points: 2 },
+                { question: "一份高品質的CFP研究報告，在「闡釋」章節應包含什麼內容？", options: ["A. 僅列出最終的碳足跡數值", "B. 鑑別主要貢獻來源(熱點分析)、進行敏感度與不確定性評估、提出結論與限制", "C. 公司的財務報表", "D. 競爭對手的碳足跡數據"], answer: "B", points: 2 },
+                { question: "在LCA中，為何「分配(Allocation)」被認為是方法學上的一大挑戰？", options: ["A. 因為沒有任何標準可循", "B. 因為不同的分配方法可能導致截然不同的結果，而方法的選擇本身可能涉及主觀判斷", "C. 因為分配的計算過程需要超級電腦", "D. 因為供應商不願意提供分配所需的數據"], answer: "B", points: 2 },
+                { question: "ISO 14067與ISO 14064-1在處理範疇三(Scope 3)排放上有何根本不同？", options: ["A. ISO 14067的系統邊界本質上就是一個完整的範疇三評估，而ISO 14064-1則將範疇三視為組織邊界外的間接排放", "B. ISO 14064-1不允許計算範疇三", "C. ISO 14067僅計算範疇一與二", "D. 兩者對範疇三的定義完全相同"], answer: "A", points: 2 },
+                { question: "在進行LCA時，若一個製程會產生逸散性排放(Fugitive Emissions)，例如冷媒洩漏，應如何量化？", options: ["A. 因難以測量，可直接忽略", "B. 應根據設備的填充量、年洩漏率等工程參數進行估算，或透過實際量測", "C. 將其計為一般空氣污染，不計入溫室氣體", "D. 這是設備商的責任，不需計算"], answer: "B", points: 2 },
+                { question: "若一個產品的PCR要求必須使用特定的LCA衝擊評估方法，但研究者認為另一種方法更適合，應如何處理？", options: ["A. 必須嚴格遵守PCR的要求以確保可比較性", "B. 可以自行更換方法，不需說明", "C. 應遵守PCR的要求，但可以在報告中額外使用另一種方法進行敏感度分析並加以討論", "D. 應向主管機關申訴，要求修改PCR"], answer: "C", points: 2 },
+                { question: "「科學基礎減碳目標(SBTi)」倡議，對於價值鏈(範疇三)排放的處理要求為何？", options: ["A. 若範疇三排放佔總排放超過40%，企業必須設定範疇三的減量目標", "B. 企業不需為其價值鏈的排放負責", "C. 僅需設定範疇一與範疇二的目標即可", "D. 範疇三的目標可以由政府代為設定"], answer: "A", points: 2 },
+                { question: "在LCA中，當一個產品的廢棄物進入「廢棄物轉製能源(Waste-to-Energy)」的焚化爐時，其產生的電力應如何考量？", options: ["A. 該電力完全歸功於產品，可視為負排放", "B. 該電力是焚化廠的產出，不應為原產品帶來效益", "C. 可透過系統擴張，將此電力視為替代了電網的電力，從而產生「避免的衝擊」", "D. 僅計算焚化爐的建造成本"], answer: "C", points: 2 },
+                { question: "在比較兩種不同的塑膠材料時，除了比較其生產階段的碳足跡，還應考慮哪個可能產生顯著差異的關鍵因素？", options: ["A. 兩種材料的顏色", "B. 兩種材料的回收率、回收技術的成熟度及其在生命終結階段的處理方式", "C. 兩種材料的品牌知名度", "D. 兩種材料的熔點"], answer: "B", points: 2 },
+                { question: "若一份CFP報告顯示，其90%的碳足跡來自單一項上游原料，這對企業的減碳策略有何啟示？", options: ["A. 應放棄生產此產品", "B. 顯示企業自身的製程效率已達極致，減碳潛力小", "C. 企業的減碳重心應放在供應鏈管理，尋找此原料的低碳替代品或與供應商合作減量", "D. 此計算結果必定有誤"], answer: "C", points: 2 },
+                { question: "在LCI盤查中，為何需要區分「基本流(Elementary Flow)」與「技術流(Technosphere Flow)」？", options: ["A. 兩者沒有區別", "B. 基本流指與環境直接交換的物質或能源(如CO2排放、取水)，技術流指在人類技術系統間交換的產品或中間產物，區分有助於正確建立模型", "C. 基本流比較便宜，技術流比較貴", "D. 基本流由政府盤查，技術流由企業盤查"], answer: "B", points: 2 },
+                { question: "根據ISO 14044，當分配無法避免時，若一個製程的產出比例會因市場價格而劇烈變動，採用經濟價值分配法可能導致什麼問題？", options: ["A. 計算結果最為準確", "B. 分配結果會非常不穩定，缺乏一致性，使不同時期的結果難以比較", "C. 這是唯一可行的分配方法", "D. 會簡化計算過程"], answer: "B", points: 2 },
+                { question: "在CFP研究中，若一個產品的使用壽命長達數十年(如建築)，在評估其生命終結階段時，最大的挑戰是什麼？", options: ["A. 產品的重量難以測量", "B. 對於數十年後的回收技術與廢棄處理法規的預測，具有高度不確定性", "C. 找不到適合的排放係數", "D. 計算過程會超過電腦的負荷"], answer: "B", points: 2 },
+                { question: "下列何者是進行「關鍵性審查(Critical Review)」時，審查小組成員應具備的最重要特質？", options: ["A. 必須是該公司的員工", "B. 具備LCA方法學專業知識，且獨立於該LCA研究之外", "C. 必須是政府官員", "D. 必須同意該研究的所有結論"], answer: "B", points: 2 },
+                { question: "歐盟提出的「產品環境足跡(PEF)」與傳統LCA的主要差異為何？", options: ["A. PEF僅計算碳足跡", "B. PEF旨在提供一套更標準化、可比較性更高的LCA方法，包含特定的計算規則與生命週期階段定義", "C. PEF是自願性的，LCA是強制性的", "D. 兩者完全沒有差異"], answer: "B", points: 2 },
+                { question: "在LCA中，當數據存在缺口(data gap)時，下列何種處理方式最符合科學精神？", options: ["A. 忽略該數據缺口", "B. 使用最樂觀的數據填補", "C. 使用最悲觀的數據填補", "D. 採用一個合理的估算方法，並在敏感度分析中測試不同估算值的影響"], answer: "D", points: 2 },
+                { question: "若一家企業想宣告其產品「氣候友善(Climate-friendly)」，相較於僅揭露碳足跡，這樣的宣告可能隱含什麼額外意義？", options: ["A. 該產品的碳足跡為絕對零", "B. 該產品的碳足跡不僅已被量化，且相較於同類產品顯著較低，或已採取了實質的減量或抵換措施", "C. 該產品的包裝是藍色的", "D. 該產品的售價比同類產品高"], answer: "B", points: 2 },
+                { question: "在CFP計算中，處理一個跨國運輸的流程時，為何不能僅使用單一的平均運輸排放係數？", options: ["A. 因為不同國家、不同運輸模式(海、陸、空)的燃料效率與排放係數差異極大", "B. 因為這樣計算太簡單", "C. 因為找不到全球平均係數", "D. 因為查證員不允許"], answer: "A", points: 2 },
+                { question: "在LCA中，若一個產品的回收過程能產出高品質的再生材料，完全替代原生材料，此情境最適合採用何種分析方法？", options: ["A. 截斷法(Cut-off Approach)", "B. 封閉式循環模型(Closed-loop Model)", "C. 經濟價值分配", "D. 忽略回收過程"], answer: "B", points: 2 },
+                { question: "下列何者是導致LCA結果不確定性的主要來源？", options: ["A. 參數不確定性(如排放係數的變異)、情境不確定性(如使用情境的假設)與模型不確定性(如分配方法的選擇)", "B. 查證員的心情", "C. 報告的字體大小", "D. LCA軟體的價格"], answer: "A", points: 2 },
+                { question: "為何在進行產品碳足跡比較時，僅比較「搖籃到大門」的數據可能產生誤導？", options: ["A. 因為「搖籃到大門」的數據最不重要", "B. 因為忽略了使用和廢棄階段，而這兩個階段的衝擊在不同產品間可能存在巨大差異(如節能產品)", "C. 因為這個階段的數據最容易造假", "D. 因為比較的意義不大"], answer: "B", points: 2 },
+                { question: "在CFP研究中，若一個製程同時使用電網的電力和自產的廢熱作為能源，應如何處理其能源輸入？", options: ["A. 只計算電力的排放", "B. 應分別量化兩種能源的輸入量，並採用各自對應的排放係數進行計算", "C. 將廢熱的排放視為零", "D. 將兩者相加後，採用電力的排放係數"], answer: "B", points: 2 },
+                { question: "ISO 14067標準對於報告的透明度有何要求？", options: ["A. 只需報告最終結果", "B. 應清楚揭露研究的目標、範疇、假設、限制、數據來源與所使用的方法，以利讀者理解與評估", "C. 僅需提供給查證機構", "D. 報告內容越模糊越好"], answer: "B", points: 2 },
+                { question: "在LCA中，當一個農業產品的碳足跡計算涉及土壤碳儲存變化時，為何這是一個複雜的議題？", options: ["A. 因為土壤中沒有碳", "B. 因為土壤碳的變化受耕作方式、氣候等多重因素影響，量測與模型模擬的變異性與不確定性高", "C. 因為農夫不願意提供數據", "D. 因為無法取得土壤樣本"], answer: "B", points: 2 },
+                { question: "若一家公司透過製程優化，使其副產品的品質提升，從而可以替代市場上某個高環境衝擊的產品，在LCA中如何量化此效益？", options: ["A. 無法量化", "B. 透過「系統擴張」，將被替代產品的生命週期納入模型，其所「避免的衝擊」可視為原系統的環境效益", "C. 直接將副產品的排放計為負值", "D. 僅在公司財報中說明"], answer: "B", points: 2 },
+                { question: "一個PCR的制定過程通常需要「計畫營運者(Programme Operator)」，其主要職責為何？", options: ["A. 負責撰寫PCR的全部內容", "B. 負責資助所有參與者的費用", "C. 負責管理整個PCR的制定、審查、發布與維護流程，確保其公正與透明", "D. 負責查證最終的PCR文件"], answer: "C", points: 2 },
+                { question: "在CFP研究中，若一個產品的「使用階段」佔了總碳足跡的80%，這對產品設計者有何啟示？", options: ["A. 應專注於降低原料的碳足跡", "B. 應專注於提升產品在使用階段的能源效率或改變其功能方式，這是減碳的最大潛力所在", "C. 應增加產品的包裝", "D. 應縮短產品的壽命"], answer: "B", points: 2 },
+                { question: "下列何者是LCA與傳統環境影響評估(EIA)最顯著的區別？", options: ["A. EIA範疇更廣，涵蓋產品生命週期；LCA僅針對單一專案", "B. LCA範疇更廣，涵蓋產品生命週期；EIA通常針對特定地點的單一專案(如建廠)", "C. 兩者沒有任何區別", "D. LCA僅評估空氣污染，EIA評估所有衝擊"], answer: "B", points: 2 },
+                { question: "在進行敏感度分析時，若發現結果對於某個分配方法的選擇極度敏感，這代表什麼？", options: ["A. 該分配方法是唯一正確的選擇", "B. 該產品不適合進行LCA", "C. 分配是此研究的關鍵方法學議題，應在報告中詳細討論不同方法選擇的理由與其對結果的影響", "D. 計算過程必定存在錯誤"], answer: "C", points: 2 },
+                { question: "若一個產品的碳足跡計算結果要用於申請具有法律效力的碳稅減免，其查證過程可能會有何不同？", options: ["A. 查證會更寬鬆", "B. 查證的嚴謹度、數據的品質要求以及對不確定性的容忍度會遠高於一般自願性宣告", "C. 不需要查證", "D. 查證過程完全相同"], answer: "B", points: 2 },
+                { question: "在LCA中，為何一個看似環保的選擇(如用紙袋替代塑膠袋)不一定總體環境衝擊較低？", options: ["A. 因為紙袋比較貴", "B. 因為需要進行完整的LCA比較，紙袋在生產過程(伐木、製漿)可能消耗更多能源與水，產生更多水污染", "C. 因為塑膠袋可以重複使用無限次", "D. 因為消費者不喜歡紙袋"], answer: "B", points: 2 },
+                { question: "當一個LCA研究的目標是「內部決策支持」而非「外部溝通」時，其研究的嚴謹度可以較低嗎？", options: ["A. 是，可以隨意計算", "B. 否，仍需遵循LCA原則，但數據品質要求或文件化程度可根據決策需求進行調整", "C. 是，完全不需要遵循任何標準", "D. 否，所有LCA研究的要求都完全一樣"], answer: "B", points: 2 },
+                { question: "在CFP研究中，若一個產品的生命終結方式在不同國家有顯著差異(如A國回收率高，B國以掩埋為主)，應如何處理？", options: ["A. 使用全球平均回收率", "B. 應根據產品的預期銷售市場，採用各市場特定的廢棄處理情境進行加權平均或分別計算", "C. 選擇對計算結果最有利的情境", "D. 忽略廢棄階段，因為太複雜"], answer: "B", points: 2 },
+                { question: "為何在LCA中，單純的「質量平衡」不能保證數據的完全正確性？", options: ["A. 因為質量守恆定律是錯誤的", "B. 因為即使總投入質量等於總輸出質量，內部各物質流的分配與轉換仍可能存在錯誤或未鑑別的逸散排放", "C. 因為查證員不相信質量平衡", "D. 因為測量儀器總是不準的"], answer: "B", points: 2 },
+                { question: "若一個產品的PCR尚未制定，企業若想進行CFP研究，最佳的第一步是什麼？", options: ["A. 等待別人制定PCR", "B. 放棄研究", "C. 參考ISO 14027的指引，主導或參與發起一個新的PCR制定計畫", "D. 隨意選用一個不相關的PCR"], answer: "C", points: 2 },
+                { question: "在LCA中，將衝擊評估結果與社會、經濟或政治價值觀連結，以進行決策的過程，屬於哪個階段的工作？", options: ["A. 盤查分析", "B. 衝擊評估中的「加權(Weighting)」步驟", "C. 目標與範疇界定", "D. 數據品質評估"], answer: "B", points: 2 },
+                { question: "一個產品的碳足跡數值，其本身是否能直接判斷該產品是「好」或「壞」？", options: ["A. 是，數值越低越好", "B. 否，數值僅是一個客觀的量化資訊，其「好壞」的判斷需在特定脈絡下(如與同類產品比較、與減量目標比較)才有意義", "C. 是，只要低於100kg CO2e就是好產品", "D. 否，因為這個數值不重要"], answer: "B", points: 2 },
+                { question: "在處理一個包含服務與實體產品的複雜系統時(如含餐飲的航空服務)，定義「功能單位」時最大的挑戰是什麼？", options: ["A. 飛機的重量難以測量", "B. 如何將服務與產品的功能整合成一個單一、可量化且具代表性的單位(如：運送一位乘客及行李飛行一公里，並提供一頓餐點)", "C. 空服員的數量不固定", "D. 燃油的價格波動太大"], answer: "B", points: 2 }
+            ]
+        };
+
+        // DOM Elements
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const startBtn = document.getElementById('start-btn');
+        const questionNumberEl = document.getElementById('question-number');
+        const progressBar = document.getElementById('progress-bar');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const nextBtn = document.getElementById('next-btn');
+        const finalScoreEl = document.getElementById('final-score');
+        const scoreMessageEl = document.getElementById('score-message');
+        const restartBtn = document.getElementById('restart-btn');
+        const answerKey = document.getElementById('answer-key');
+        const timerEl = document.getElementById('timer');
+        const resultTitleEl = document.getElementById('result-title');
+        const resultSubtitleEl = document.getElementById('result-subtitle');
+
+        // Quiz State
+        let quizQuestions = [];
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let timerInterval = null;
+
+        // Functions
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function selectQuizQuestions() {
+            const easyQuestions = [...questionBank.easy];
+            const mediumQuestions = [...questionBank.medium];
+            const hardQuestions = [...questionBank.hard];
+
+            shuffleArray(easyQuestions);
+            shuffleArray(mediumQuestions);
+            shuffleArray(hardQuestions);
+
+            const selectedEasy = easyQuestions.slice(0, 20);
+            const selectedMedium = mediumQuestions.slice(0, 20);
+            const selectedHard = hardQuestions.slice(0, 20);
+
+            quizQuestions = [...selectedEasy, ...selectedMedium, ...selectedHard];
+            shuffleArray(quizQuestions);
+        }
+
+        function startTimer(duration) {
+            let timeLeft = duration;
+            timerInterval = setInterval(() => {
+                const minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                seconds = seconds < 10 ? '0' + seconds : seconds;
+                timerEl.textContent = `${minutes}:${seconds}`;
+                timeLeft--;
+
+                if (timeLeft < 0) {
+                    clearInterval(timerInterval);
+                    processAndShowResults(true); 
+                }
+            }, 1000);
+        }
+
+        function startQuiz() {
+            selectQuizQuestions();
+            currentQuestionIndex = 0;
+            userAnswers = new Array(60).fill(null);
+            clearInterval(timerInterval);
+            
+            startScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            
+            displayQuestion();
+            startTimer(90 * 60); // 90 minutes
+        }
+
+        function displayQuestion() {
+            const selectedAnswer = userAnswers[currentQuestionIndex];
+            const question = quizQuestions[currentQuestionIndex];
+            
+            questionNumberEl.textContent = currentQuestionIndex + 1;
+            progressBar.style.width = `${((currentQuestionIndex) / quizQuestions.length) * 100}%`;
+            questionTextEl.textContent = question.question;
+            
+            optionsContainer.innerHTML = '';
+            question.options.forEach(option => {
+                const button = document.createElement('button');
+                const optionChar = option.charAt(0);
+                button.textContent = option;
+                button.classList.add('option-btn', 'w-full', 'p-4', 'text-left', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'rounded-lg', 'transition-colors', 'duration-200', 'hover:bg-blue-100', 'dark:hover:bg-gray-700');
+                
+                if (optionChar === selectedAnswer) {
+                    button.classList.add('selected');
+                }
+
+                button.onclick = () => {
+                    document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
+                    button.classList.add('selected');
+                    userAnswers[currentQuestionIndex] = optionChar;
+                };
+                optionsContainer.appendChild(button);
+            });
+            
+            if (currentQuestionIndex === quizQuestions.length - 1) {
+                nextBtn.textContent = '提交試卷';
+            } else {
+                nextBtn.textContent = '下一題';
+            }
+        }
+        
+        function handleNextQuestion() {
+            if (userAnswers[currentQuestionIndex] === null) {
+                 const tempAlert = document.createElement('div');
+                tempAlert.textContent = '請選擇一個答案！';
+                tempAlert.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background-color: #ef4444; color: white; padding: 10px 20px; border-radius: 8px; z-index: 1000; transition: opacity 0.5s;';
+                document.body.appendChild(tempAlert);
+                setTimeout(() => {
+                    tempAlert.style.opacity = '0';
+                    setTimeout(() => tempAlert.remove(), 500);
+                }, 2000);
+                return;
+            }
+            
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizQuestions.length) {
+                displayQuestion();
+            } else {
+                processAndShowResults(false);
+            }
+        }
+
+        function processAndShowResults(timeUp = false) {
+            clearInterval(timerInterval);
+            let score = 0;
+            quizQuestions.forEach((question, index) => {
+                if (userAnswers[index] === question.answer) {
+                    score += question.points;
+                }
+            });
+
+            progressBar.style.width = '100%';
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            
+            if (timeUp) {
+                resultTitleEl.textContent = "時間到！";
+                resultSubtitleEl.textContent = "測驗已自動提交。";
+            } else {
+                resultTitleEl.textContent = "測驗結束！";
+                resultSubtitleEl.textContent = "";
+            }
+
+            finalScoreEl.textContent = `${score} 分`;
+
+            let message = '';
+            if (score >= 90) {
+                message = '表現卓越！您已是碳足跡領域的專家！';
+            } else if (score >= 70) {
+                message = '成績優異！您對碳足跡的核心概念掌握得非常扎實。';
+            } else if (score >= 50) {
+                message = '不錯的成績！您已具備良好的基礎，繼續努力！';
+            } else {
+                message = '別氣餒，再接再厲！複習詳解能幫助您釐清觀念。';
+            }
+            scoreMessageEl.textContent = message;
+            
+            displayAnswerKey();
+        }
+
+        function displayAnswerKey() {
+            answerKey.innerHTML = '';
+            quizQuestions.forEach((question, index) => {
+                const selected = userAnswers[index];
+                const isCorrect = selected === question.answer;
+
+                const keyItem = document.createElement('div');
+                keyItem.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-700/50');
+                
+                let answerHtml;
+                if (selected) {
+                    const yourAnswerText = `您的答案：${selected}`;
+                    const answerStatus = isCorrect ? 
+                        `<span class="text-green-500 font-bold ml-2">✔ 正確 (+${question.points}分)</span>` : 
+                        `<span class="text-red-500 font-bold ml-2">✘ 錯誤</span>`;
+                    answerHtml = `<p class="mt-2 text-sm">${yourAnswerText} ${answerStatus}</p>`;
+                } else {
+                    answerHtml = `<p class="mt-2 text-sm text-gray-500">未作答</p>`;
+                }
+
+                keyItem.innerHTML = `
+                    <p class="font-bold mb-2">${index + 1}. ${question.question}</p>
+                    <div class="pl-4 text-sm space-y-1">
+                        ${question.options.map(opt => {
+                            const optChar = opt.charAt(0);
+                            let classes = 'text-gray-600 dark:text-gray-300';
+                            if (optChar === question.answer) {
+                                classes = 'text-green-600 dark:text-green-400 font-bold';
+                            } else if (selected && optChar === selected && !isCorrect) {
+                                classes = 'text-red-600 dark:text-red-400 line-through';
+                            }
+                            return `<p class="${classes}">${opt}</p>`;
+                        }).join('')}
+                    </div>
+                    ${answerHtml}
+                `;
+                answerKey.appendChild(keyItem);
+            });
+        }
+
+        function restartQuiz() {
+            clearInterval(timerInterval);
+            resultScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+
+        // Event Listeners
+        startBtn.addEventListener('click', startQuiz);
+        nextBtn.addEventListener('click', handleNextQuestion);
+        restartBtn.addEventListener('click', restartQuiz);
+
+    </script>
+</body>
+</html>
