@@ -1,652 +1,115 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>產品碳足跡知識測驗 (v5.3 - 最終優化版)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', 'Noto Sans TC', sans-serif;
-        }
-        /* 單選按鈕樣式 */
-        .option-btn.selected {
-            background-color: #3b82f6; /* bg-blue-600 */
-            color: white;
-            border-color: #3b82f6; /* border-blue-600 */
-        }
-        /* 複選框樣式 */
-        .option-checkbox:checked + label {
-            background-color: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
-        }
-        .option-label {
-            display: block;
-            width: 100%;
-            padding: 1rem;
-            text-align: left;
-            border-width: 2px;
-            border-radius: 0.5rem;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        .option-label:hover {
-            background-color: #eff6ff; /* bg-blue-50 */
-        }
-        .dark .option-label:hover {
-             background-color: #374151; /* dark:bg-gray-700 */
-        }
-        /* 結果樣式 */
-        .correct {
-            background-color: #22c55e !important;
-            color: white !important;
-            border-color: #22c55e !important;
-        }
-        .incorrect {
-            background-color: #ef4444 !important;
-            color: white !important;
-            border-color: #ef4444 !important;
-        }
-        .nav-btn {
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #d1d5db; /* border-gray-300 */
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .nav-btn.answered {
-            background-color: #6b7280; /* bg-gray-500 */
-            color: white;
-            border-color: #6b7280;
-        }
-        .nav-btn.current {
-            border-color: #3b82f6; /* border-blue-500 */
-            border-width: 2px;
-            font-weight: bold;
-            color: #3b82f6;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>產品碳足跡知識測驗 (v5.3)</title>
+
+  <!-- UI 套件 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <!-- 自訂樣式 -->
+  <style>
+    body{font-family:'Inter','Noto Sans TC',sans-serif;}
+    /* 單選按鈕樣式 */
+    .option-btn.selected{background:#3b82f6;color:#fff;border-color:#3b82f6;}
+    /* 複選框樣式 */
+    .option-checkbox:checked+label{background:#3b82f6;color:#fff;border-color:#3b82f6;}
+    .option-label{display:block;width:100%;padding:1rem;text-align:left;border:2px solid;border-radius:0.5rem;transition:.2s;cursor:pointer;}
+    .option-label:hover{background:#eff6ff;}
+    .dark .option-label:hover{background:#374151;}
+    /* 結果樣式 */
+    .correct{background:#22c55e!important;color:#fff!important;border-color:#22c55e!important;}
+    .incorrect{background:#ef4444!important;color:#fff!important;border-color:#ef4444!important;}
+    /* 導覽列按鈕 */
+    .nav-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid #d1d5db;border-radius:50%;cursor:pointer;transition:.2s;}
+    .nav-btn.answered{background:#6b7280;color:#fff;border-color:#6b7280;}
+    .nav-btn.current{border:2px solid #3b82f6;font-weight:bold;color:#3b82f6;}
+  </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4">
 
-    <div id="quiz-container" class="w-full max-w-4xl mx-auto">
-        <!-- 開始畫面 -->
-        <div id="start-screen" class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl text-center">
-            <h1 class="text-3xl md:text-4xl font-bold text-green-600 dark:text-green-400 mb-6">產品碳足跡知識測驗</h1>
-            <p class="text-gray-600 dark:text-gray-400 mb-6">本測驗旨在深度評估您的專業知識。共50題，<strong class="text-red-500">限時90分鐘</strong>。</p>
-            <div class="flex flex-col md:flex-row justify-center space-y-2 md:space-y-0 md:space-x-4 mb-8 text-sm text-gray-500 dark:text-gray-400">
-                <span>單選題: 30題 (2分/題)</span>
-                <span>複選題: 20題 (2分/題，部分給分)</span>
-            </div>
-            <button id="start-btn" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-xl transition-transform transform hover:scale-105 shadow-lg">
-                開始測驗
-            </button>
-        </div>
-
-        <!-- 測驗畫面 -->
-        <div id="quiz-screen" class="hidden bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl">
-            <!-- 題目導覽列 -->
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold mb-3">題目導覽</h3>
-                <div id="question-nav" class="grid grid-cols-10 sm:grid-cols-15 md:grid-cols-20 gap-2"></div>
-            </div>
-            
-            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-                <div class="flex justify-between items-center mb-2">
-                    <p class="text-sm font-semibold text-green-600 dark:text-green-400">問題 <span id="question-number"></span> / 50</p>
-                    <div id="timer" class="text-lg font-bold text-red-500">90:00</div>
-                </div>
-                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                    <div id="progress-bar" class="bg-green-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
-                </div>
-            </div>
-            
-            <div id="question-text" class="text-xl md:text-2xl font-bold my-6 min-h-[6rem]"></div>
-            <div id="options-container" class="space-y-4"></div>
-            
-            <div class="flex justify-between mt-8">
-                <button id="prev-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg text-lg transition-transform transform hover:scale-105 shadow-md">上一題</button>
-                <button id="next-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition-transform transform hover:scale-105 shadow-md">下一題</button>
-            </div>
-        </div>
-
-        <!-- 結果畫面 -->
-        <div id="result-screen" class="hidden bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl">
-            <h2 class="text-3xl font-bold text-center mb-2" id="result-title">測驗結束！</h2>
-            <p class="text-lg text-center text-gray-600 dark:text-gray-400 mb-4" id="result-subtitle"></p>
-            <p class="text-5xl font-bold text-center text-green-600 dark:text-green-400 mb-6" id="final-score"></p>
-            <p class="text-lg text-center text-gray-600 dark:text-gray-400 mb-8" id="score-message"></p>
-            
-            <div class="text-center mb-8">
-                <button id="restart-btn" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-xl transition-transform transform hover:scale-105 shadow-lg">
-                    再次測驗
-                </button>
-            </div>
-
-            <div id="answer-key-container">
-                <h3 class="text-2xl font-bold mb-4 border-b-2 border-gray-200 dark:border-gray-600 pb-2">答案詳解</h3>
-                <div id="answer-key" class="space-y-6 max-h-[50vh] overflow-y-auto pr-2"></div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- 提交確認 Modal -->
-    <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-        <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl text-center w-11/12 md:w-1/3">
-            <p id="confirm-msg" class="text-lg mb-6"></p>
-            <div class="flex justify-center">
-                <button id="confirm-submit-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg mr-4">確認提交</button>
-                <button id="cancel-submit-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-lg">取消</button>
-            </div>
-        </div>
+  <div id="quiz-container" class="w-full max-w-4xl mx-auto">
+    <!-- ====== Start Screen ====== -->
+    <div id="start-screen" class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl text-center">
+      <h1 class="text-3xl md:text-4xl font-bold text-green-600 dark:text-green-400 mb-6">
+        產品碳足跡知識測驗
+      </h1>
+      <p class="text-gray-600 dark:text-gray-400 mb-6">
+        本測驗旨在深度評估您的專業知識。共 50 題，
+        <strong class="text-red-500">限時 90 分鐘</strong>。
+      </p>
+      <div class="flex flex-col md:flex-row justify-center space-y-2 md:space-y-0 md:space-x-4 mb-8 text-sm text-gray-500 dark:text-gray-400">
+        <span>單選題：30 題 (2 分/題)</span>
+        <span>複選題：20 題 (2 分/題，部分給分)</span>
+      </div>
+      <button id="start-btn" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-xl transition-transform transform hover:scale-105 shadow-lg">
+        開始測驗
+      </button>
     </div>
 
+    <!-- ====== Quiz Screen ====== -->
+    <div id="quiz-screen" class="hidden bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl">
+      <!-- 題目導覽列 -->
+      <div class="mb-6">
+        <h3 class="text-lg font-semibold mb-3">題目導覽</h3>
+        <div id="question-nav" class="grid grid-cols-10 sm:grid-cols-15 md:grid-cols-20 gap-2"></div>
+      </div>
 
-    <script>
-        const questionBank = {
-            singleChoice: [
-                // 單選題 (100題, 每題2分) - 深度優化
-                { question: "在LCA方法學中，哪一個階段主要任務是定義研究為何而做、為誰而做，並劃定評估的邊界？", options: ["A. 衝擊評估 (LCIA)，此階段專注於將盤查結果轉換為環境衝擊指標，例如全球暖化潛勢或酸化潛勢。", "B. 目標與範疇界定。", "C. 盤查分析 (LCI)，此階段的核心工作是鉅細靡遺地收集產品系統中所有的物質與能源投入與產出數據。", "D. 闡釋 (Interpretation)，此階段負責全面性地解釋盤查與衝擊評估的結果，並根據研究目標提出結論與建議。"], answer: "B", points: 2 },
-                { question: "ISO 14067標準主要規範的對象是下列何者？", options: ["A. 國家整體的溫室氣體排放總量與其減量目標的設定方法，通常參考IPCC指引。", "B. 企業或組織邊界內的年度溫室氣體排放盤查與報告，主要依循ISO 14064-1。", "C. 產品或服務的碳足跡。", "D. 特定減量專案(例如造林或能源效率提升)的成效確證與查證流程，主要依循ISO 14064-2。"], answer: "C", points: 2 },
-                { question: "「搖籃到大門 (Cradle-to-Gate)」的系統邊界，其評估終點通常設定在產品生命週期的哪個環節？", options: ["A. 產品送達最終消費者手中，準備開始被使用的那一刻，此通常屬於使用階段的起點。", "B. 產品離開工廠大門。", "C. 所有原物料運抵工廠門口，尚未進入生產線的時刻，此為原料取得階段的終點。", "D. 產品使用壽命結束，進入廢棄物回收或處理系統的時刻，此為生命終結階段。"], answer: "B", points: 2 },
-                { question: "計算溫室氣體排放量的基礎公式為「活動數據」與「排放係數」的關係為何？", options: ["A. 兩者相加，這種計算方式在環境科學中極為罕見，不符合排放量計算的基本物理意義。", "B. 兩者相乘。", "C. 活動數據除以排放係數，這個公式可能用於計算達成單位排放量所需的活動規模，而非總排放量。", "D. 排放係數除以活動數據，這個公式沒有明確的物理意義，並非標準計算方法。"], answer: "B", points: 2 },
-                { question: "在LCA中，直接從工廠磅秤、電表或流量計讀取，用以代表特定製程活動規模的數據，屬於何種類型？", options: ["A. 二級數據 (Secondary Data)，通常指從公開資料庫、文獻或報告中引用的非特定性平均數據。", "B. 代理數據 (Proxy Data)，指當無法取得目標數據時，使用性質相似但非完全相同的數據進行替代。", "C. 一級數據 (Primary Data)。", "D. 模擬數據 (Simulated Data)，指透過電腦模型或演算法推算出的理論數據，而非實際量測。"], answer: "C", points: 2 },
-                { question: "我國環境部所推動的產品碳足跡標籤制度，其核心設計理念為何？", options: ["A. 作為產品的製造日期與產地履歷標示，確保食品安全。", "B. 認證該產品在生產過程中完全不含有任何對環境有害的物質，這比較接近環保標章或毒物管理的範疇。", "C. 揭露產品生命週期的碳排放量。", "D. 作為一種高科技防偽標記，利用特殊印刷技術防止仿冒品流入市面，與環保資訊無關。"], answer: "C", points: 2 },
-                { question: "在LCA中，用以確保不同產品之間能進行公平比較的一個標準化功能性產出基準，稱之為？", options: ["A. 參考流 (Reference Flow)，指為達成功能單位所需的具體物料與能源流量，是功能單位的具體化。", "B. 功能單位 (Functional Unit)。", "C. 宣告單位 (Declared Unit)，常用於B2B溝通，指的是中間產品的特定數量，例如「每公噸鋼材」。", "D. 比較基準 (Comparative Basis)，這是一個通用術語，描述比較研究的基礎，但非LCA的特定標準名詞。"], answer: "B", points: 2 },
-                { question: "歐盟為處理境外高碳排產品進口可能導致本國產業競爭力下降的「碳洩漏」問題，提出了何種機制？", options: ["A. RE100，這是一項由企業自願參與的全球性倡議，目標是100%使用再生能源。", "B. SBTi，這是一項協助企業設定符合氣候科學的減碳目標的全球性倡議。", "C. CBAM (碳邊境調整機制)。", "D. GDPR (一般資料保護規範)，這是歐盟關於個人資料保護與隱私權的嚴格法規。"], answer: "C", points: 2 },
-                { question: "若一家企業要盤查其整個公司的年度溫室氣體排放量，應主要參考下列哪一項ISO標準？", options: ["A. ISO 14067，此標準專門針對單一產品或服務的生命週期，而非整個組織。", "B. ISO 14064-1。", "C. ISO 14040，此標準提供了生命週期評估(LCA)的通用原則與框架，是方法學而非盤查標準。", "D. ISO 14025，此標準規範了第三類環境宣告(EPD)的程序與格式，而非組織盤查。"], answer: "B", points: 2 },
-                { question: "從公開的LCA資料庫(如Ecoinvent)或政府報告中取得的平均排放係數，在LCA研究中被歸類為？", options: ["A. 場址特定數據 (Site-specific data)，這種數據必須是在特定工廠或地點直接量測或收集的。", "B. 二級數據 (Secondary Data)。", "C. 關鍵性審查數據 (Critical review data)，這指的是經過專家審查的LCA研究本身，而非數據類型。", "D. 即時量測數據 (Real-time data)，這種數據通常是透過感測器持續不斷地收集而來。"], answer: "B", points: 2 },
-                { question: "「搖籃到墳墓 (Cradle-to-Grave)」的評估範疇，其涵蓋的生命週期終點為何？", options: ["A. 產品離開工廠大門，此為「搖籃到大門」的終點。", "B. 產品送達零售商，此為配送銷售階段的一部分。", "C. 產品的最終處置。", "D. 產品的售後服務或保固期限結束，這通常不被視為物質流的終點。"], answer: "C", points: 2 },
-                { question: "在生命週期衝擊評估(LCIA)中，將盤查清單中的各種污染物(如SOx, NOx)歸入其對應的環境衝擊類別(如酸化)的步驟，稱作什麼？", options: ["A. 特徵化 (Characterization)，此步驟是計算各物質在該衝擊類別中的相對貢獻潛力。", "B. 分類 (Classification)。", "C. 標準化 (Normalization)，此步驟是將不同衝擊類別的結果與一個共同的參考基準進行比較。", "D. 加權 (Weighting)，此步驟是根據社會價值或專家判斷，對不同衝擊類別賦予相對的重要性權重。"], answer: "B", points: 2 },
-                { question: "企業鑑別出產品製程中的「排碳熱點」後，最主要的管理目的是什麼？", options: ["A. 僅作為企業社會責任報告書中，用以展示公司對環保議題關注的素材。", "B. 作為精準減碳的依據。", "C. 作為向政府申請節能相關補助的唯一且必要的證明文件。", "D. 將該環節所產生的環境成本，透過公式精確地轉嫁給消費者，以提高產品的最終售價與公司利潤。"], answer: "B", points: 2 },
-                { question: "在計算「二氧化碳當量(CO2e)」時，作為所有溫室氣體暖化潛勢計算基準的氣體為何？", options: ["A. 甲烷 (CH4)，雖然其暖化潛勢遠高於二氧化碳，但並非計算基準。", "B. 氧化亞氮 (N2O)，主要來自農業活動，也非計算基準。", "C. 二氧化碳 (CO2)。", "D. 氟化氣體 (F-gases)，此類氣體包含多種物質，且因其極高的暖化潛勢而被嚴格管制，但非計算基準。"], answer: "C", points: 2 },
-                { question: "若某產品尚無對應的產品類別規則(PCR)，企業若想申請碳標籤，正確的第一步是？", options: ["A. 借用一個性質最相近的其他產品PCR，並在報告中詳細註明此替代情況與可能造成的差異。", "B. 發起或參與制定新的PCR。", "C. 暫時放棄申請，直到市場上有其他領導廠商制定出相關PCR後再行跟進，以節省開發成本。", "D. 自行定義一套計算方法並直接送交第三方查證，主張在沒有PCR的情況下，企業有權自訂規則。"], answer: "B", points: 2 },
-                { question: "「生命週期思維」的核心是為了避免下列何種情況發生？", options: ["A. 產品的行銷活動投入了過高的成本，侵蝕了公司的利潤空間。", "B. 衝擊轉移。", "C. 產品的工業設計不符合當前的市場美學潮流，導致銷售不如預期。", "D. 公司的財務報表因為投入過多的環保相關費用而出現虧損。"], answer: "B", points: 2 },
-                { question: "我國的「減碳標籤」申請資格，與「碳足跡標籤」之間有何關聯？", options: ["A. 兩者為完全獨立的標籤，企業可以根據自身行銷策略選擇任一申請，並無先後順序或關聯性。", "B. 需先取得碳足跡標籤作為減量基準。", "C. 減碳標籤是碳足跡標籤的初階版本，其申請門檻較低，因此企業通常會先申請減碳標籤以測試市場反應。", "D. 企業必須先取得減碳標籤，證明其減碳實績後，才能進一步申請碳足跡標籤，以揭露完整的排放資訊。"], answer: "B", points: 2 },
-                { question: "在碳足跡計算中，「活動數據」具體指的是什麼？", options: ["A. 產品在主要社群媒體平台上的互動次數與觸及率等行銷指標。", "B. 導致溫室氣體排放的活動規模量化值。", "C. IPCC發布的年度全球氣候變遷趨勢報告中的各項關鍵科學數據。", "D. 企業為了推廣其綠色產品形象，所舉辦的各類市場行銷活動的總次數。"], answer: "B", points: 2 },
-                { question: "在碳足跡計算中，「排放係數」的定義為何？", options: ["A. 指整個工廠在一個完整財政年度內的溫室氣體總排放量。", "B. 單位活動數據所對應的溫室氣體排放量。", "C. 指一個產品在其完整生命週期中所產生的溫室氣體總量。", "D. 指產品在運輸過程中，每單位重量貨物所行駛的平均里程數。"], answer: "B", points: 2 },
-                { question: "在LCA中，劃定「系統邊界」的主要目的是什麼？", options: ["A. 為了方便繪製更美觀且易於主管理解的產品製程流程圖。", "B. 界定評估範疇以確保研究的一致性。", "C. 為了精確計算工廠的總佔地面積與其最大理論產能。", "D. 這通常是LCA軟體根據所選產品類別自動設定的功能，使用者一般無法也無需進行更改。"], answer: "B", points: 2 },
-                { question: "ISO 14040 與 ISO 14044 這兩份標準在LCA領域中扮演何種角色？", options: ["A. 分別提供農業和工業產品的特定計算規則，前者針對農業，後者針對工業，以確保各行業計算的準確性。", "B. 前者提供原則與框架，後者提供要求與指引。", "C. 兩者皆為各國官方認可的排放係數資料庫，定期更新供全球使用者付費下載。", "D. 前者主要規範LCA查證員的資格與能力要求，後者則詳細規定LCA報告的標準格式與章節。"], answer: "B", points: 2 },
-                { question: "在LCA中，比較「一公斤的A牌牛肉」與「一公斤的B牌雞肉」的碳足跡，這樣的比較為何可能不恰當？", options: ["A. 因為兩者的市場售價不同，無法反映其真實的環境成本，故比較基礎不公平。", "B. 功能相似但非完全相同，且生產系統差異巨大。", "C. 因為根據現有研究，牛肉的碳足跡幾乎在所有情況下都高於雞肉，所以比較結果是顯而易見的，缺乏研究價值。", "D. 因為雞肉的重量通常較輕，以公斤作為比較單位對雞肉不公平，應改用隻數。"], answer: "B", points: 2 },
-                { question: "在LCA盤查時，可忽略對總體衝擊貢獻極小的物質流或能源流，此一規則的正式名稱為何？", options: ["A. 簡化原則 (Simplification Principle)，意指為了簡化計算而忽略不重要的項目。", "B. 截斷準則 (Cut-off Criteria)。", "C. 80/20法則 (Pareto Principle)，指80%的衝擊來自20%的排放源，故可忽略其餘80%的排放源。", "D. 重要性原則 (Materiality Principle)，此為財會領域術語，在LCA中不適用。"], answer: "B", points: 2 },
-                { question: "PAS 2060這份國際廣泛採用的標準，是針對何種性質的宣告提供規範與指引？", options: ["A. 產品的永續林業(FSC)認證，確保木材來源的合法性與永續性。", "B. 企業的社會責任績效報告(CSR Report)，涵蓋勞工人權、社區參與等多個面向。", "C. 達成「碳中和」的宣告。", "D. 產品中回收再生成分比例的宣告，例如再生塑膠的使用比例。"], answer: "C", points: 2 },
-                { question: "在循環經濟模型中，「逆物流 (Reverse Logistics)」的核心功能是什麼？", options: ["A. 將產品用最快的速度從工廠送到消費者手中，以提升客戶滿意度。", "B. 建立產品從消費端回到生產端的回收管道。", "C. 專門處理大型或超重貨物的跨國運輸物流，例如風力發電機葉片。", "D. 管理線上購物平台的退貨流程，確保退貨商品能快速回到倉庫並重新上架。"], answer: "B", points: 2 },
-                { question: "韓國的EPD (環境產品宣告) 制度與我國的碳標籤制度，在揭露的資訊廣度上有何主要不同？", options: ["A. EPD僅揭露產品的水足跡，而我國碳標籤僅揭露碳足跡，兩者關注的衝擊類別不同。", "B. EPD揭露包含碳足跡在內的多項環境衝擊潛勢。", "C. 兩者揭露的資訊項目完全相同，主要的不同僅在於標籤的設計風格與主管機關。", "D. EPD的數據是由政府直接提供給企業，而碳標籤的數據則完全由企業自行宣告，不需查證。"], answer: "B", points: 2 },
-                { question: "在LCA中，當一個製程同時產出目標產品A與有價值的副產品B時，應如何處理其共同的環境負荷？", options: ["A. 將所有環境負荷都歸於市場價值較高的產品A，因為副產品B是額外產出的，不應承擔主要責任。", "B. 透過「分配 (Allocation)」程序。", "C. 忽略副產品B的存在，因為它不是研究的主要對象，計算上可以簡化處理。", "D. 必須重新設計製程以避免產生任何副產品，這是LCA的強制要求。"], answer: "B", points: 2 },
-                { question: "下列何者不屬於生命週期評估 (LCA) 中常見的環境衝擊類別？", options: ["A. 資源消耗潛勢 (Abiotic Depletion Potential)，評估非生物資源的消耗。", "B. 酸化潛勢 (Acidification Potential)，評估酸雨的形成潛力。", "C. 員工離職率 (Employee Turnover Rate)。", "D. 優養化潛勢 (Eutrophication Potential)，評估水體中營養物質過多造成的影響。"], answer: "C", points: 2 },
-                { question: "「產品類別規則 (PCR)」在LCA中的功能，最接近下列何者？", options: ["A. 產品的行銷手冊，主要用於向消費者說明產品的各項優點與特色。", "B. 財務會計中的「一般公認會計原則 (GAAP)」。", "C. 公司的內部員工行為守則，規範員工在工作場所應遵守的規定。", "D. 產品的安全資料表 (SDS)，提供化學品的危害資訊與安全使用須知。"], answer: "B", points: 2 },
-                { question: "一份碳足跡報告的最終數值，其可信度與下列哪個因素的關聯性最低？", options: ["A. 所使用之一級與二級數據的品質、時間與地理代表性。", "B. 報告的排版設計與印刷精美程度。", "C. 計算過程中所做的各項假設是否合理、透明且有依據。", "D. 研究方法是否嚴格遵循相關的國際標準，如ISO 14067。"], answer: "B", points: 2 },
-                { question: "下列何者為「一級數據」的典型範例？", options: ["A. 從政府能源統計報告中，查到的全國電力行業去年度平均排放係數。", "B. 透過磅秤實際量測投入某特定製程的化學原料公斤數。", "C. 從LCA軟體內建的歐洲通用資料庫中，選用的德國平均塑膠生產數據。", "D. 參考一篇國際學術期刊中，關於日本類似製程的估算數據。"], answer: "B", points: 2 },
-                { question: "在比較電動車與燃油車的LCA時，下列哪個階段的排放差異是比較的關鍵之一？", options: ["A. 兩者在組裝工廠廠房內的照明用電，因為這代表了基本的營運效率。", "B. 電池製造與電力來源，以及燃油的開採與燃燒。", "C. 兩者輪胎在行駛過程中，因摩擦產生的道路揚塵微粒。", "D. 兩者在汽車銷售中心展示間的空調與照明耗能。"], answer: "B", points: 2 },
-                { question: "下列何者最能體現「生命週期思維」在政策制定上的應用？", options: ["A. 政府僅針對工廠煙囪的污染物排放制定嚴格的罰款標準，不考慮其上下游的影響。", "B. 政府在推廣禁用一次性塑膠吸管時，同時委託研究評估紙吸管或PLA吸管在生產、運輸及廢棄階段可能產生的其他潛在環境衝擊。", "C. 政府僅提供高額補助給消費者購買節能家電，但不考慮這些產品廢棄後的回收體系與處理問題。", "D. 政府僅強制要求所有產品包裝上必須清楚標示製造商的詳細資訊。"], answer: "B", points: 2 },
-                { question: "在ISO 14067中，「宣告單位 (Declared Unit)」通常應用於何種情境？", options: ["A. 當一項研究需要進行完整的「搖籃到墳墓」評估，且要對外公開宣告時。", "B. 當研究對象為一項無形的服務而非實體產品，難以定義功能時。", "C. 當評估對象為企業對企業(B2B)的中間產品時。", "D. 當產品準備申請減碳標籤，需要一個宣告減量成果的基準單位時。"], answer: "C", points: 2 },
-                { question: "下列何種情境最適合使用「搖籃到大門 (Cradle-to-Gate)」的系統邊界進行評估？", options: ["A. 環保團體欲評估市售瓶裝水對環境的完整衝擊，以教育消費者。", "B. 一家輪胎製造商，欲提供其輪胎產品的碳足跡數據給下游的汽車組裝廠客戶。", "C. 學術機構欲比較紙杯與陶瓷杯在辦公室重複使用情境下的長期環境優劣。", "D. 消費者報告欲分析一般家庭使用洗衣機十年期間的總耗電量與相關排放。"], answer: "B", points: 2 },
-                { question: "在LCA中，若要比較兩種不同品牌瓶裝水，下列何者是較為理想的功能單位？", options: ["A. 一個標準600ml的寶特瓶，因為這是最常見的銷售單位。", "B. 一公升的飲用水，因為這排除了包裝大小的影響。", "C. 提供「滿足一位成年人單次解渴需求」的功能。", "D. 一卡車的瓶裝水，因為這能反映大規模運輸的效率。"], answer: "C", points: 2 },
-                { question: "下列何者是「碳中和」宣告通常必須包含的步驟？", options: ["A. 僅需購買足夠的綠電憑證(RECs)，以證明公司使用的電力為綠電即可。", "B. 量化碳足跡、執行內部減量、購買合格碳權抵銷剩餘排放。", "C. 將公司所有的燃油公務車都更換為電動車，並廣設充電樁。", "D. 僅需發布一篇由公司執行長簽署的、宣告達成碳中和目標的新聞稿。"], answer: "B", points: 2 },
-                { question: "根據ISO 14067，產品生命週期中的「資本財」(如廠房、機器設備)的排放應如何處理？", options: ["A. 因其貢獻相對於產品原料通常較小，在截斷準則下可直接忽略不計。", "B. 應將其生命週期的排放攤提到單位產品上。", "C. 資本財的環境衝擊應由其設備製造商完全承擔，產品使用者不需計算。", "D. 僅需計算資本財在日常維護保養時，所消耗的零件與能源排放。"], answer: "B", points: 2 },
-                { question: "在LCA中，若一個單元製程同時產出多種有用的產品，且無法透過系統擴張避免分配，則應優先採用何種分配基礎？", options: ["A. 採用隨機分配的方式，以確保分配的公平性與客觀性。", "B. 優先尋找能反映其間基本物理關係的分配方式。", "C. 永遠優先採用經濟價值分配，因為它最能反映市場的真實情況。", "D. 將所有環境負荷平均分配給每一種產品，不論其產量或價值。"], answer: "B", points: 2 },
-                { question: "下列哪一項最能描述「產品類別規則(PCR)」在國際貿易中的重要性？", options: ["A. PCR是各國海關設定進口關稅稅率的唯一官方依據。", "B. 透過提供一致的計算規則，促進全球市場的公平競爭。", "C. PCR文件中會明確限制特定產品的年度進出口數量，以保護本地產業。", "D. 擁有PCR的產品可以在進出口時免除所有的海關查驗程序。"], answer: "B", points: 2 },
-                { question: "下列何者並非ISO 14067標準所強調的核心原則？", options: ["A. 透明度 (Transparency)，要求公開揭露假設、方法與數據來源。", "B. 完整性 (Completeness)，要求納入所有重大的排放與移除。", "C. 成本效益最大化 (Cost-Effectiveness)。", "D. 相關性 (Relevance)，要求選用的數據與方法需與研究目標相關。"], answer: "C", points: 2 },
-                { question: "在評估一項農產品(如稻米)的碳足跡時，下列哪個排放源是傳統工業產品LCA中較少見但卻至關重要的？", options: ["A. 產品包裝袋的生產過程所產生的溫室氣體排放。", "B. 將收成的稻米從農田運輸到加工廠的柴油消耗排放。", "C. 來自土壤的生物性排放。", "D. 碾米加工廠房在營運時所消耗的電力。"], answer: "C", points: 2 },
-                { question: "在LCA中，若數據品質評估(DQR)顯示某項數據的「地理相關性」不佳(如用歐洲數據評估亞洲產品)，這代表什麼？", options: ["A. 此數據完全不可用，必須立即刪除並重新尋找，否則研究無效。", "B. 此數據可能無法準確反映本地情況，應在報告中揭露此不確定性。", "C. 這表示此數據的品質非常優良，因為它是經過國際權威機構驗證的。", "D. 應將此數據直接乘以一個通用的區域修正因子(例如1.2)後再使用。"], answer: "B", points: 2 },
-                { question: "企業在執行產品碳足跡盤查後，除了用於外部溝通，對內管理的最大價值之一是什麼？", options: ["A. 可以作為各部門員工年度績效考核(KPI)的唯一指標。", "B. 鑑別供應鏈與製程中的資源效率低落處。", "C. 可以完全取代傳統的財務成本會計，作為新的成本管理工具。", "D. 可以作為公司內部所有員工教育訓練的唯一指定教材。"], answer: "B", points: 2 },
-                { question: "下列何者是ISO 14067對於「避免重複計算」原則的正確詮釋？", options: ["A. 一個產品的碳足跡一旦計算完成並發布，就不能再進行第二次計算或更新。", "B. 相同的溫室氣體排放與移除應只被計算一次。", "C. 向上游供應商索取的數據，不可以與企業自行盤查的數據有任何重複的項目。", "D. 企業對企業(B2B)的碳足跡與企業對消費者(B2C)的碳足跡不可針對同一產品重複計算。"], answer: "B", points: 2 },
-                { question: "在進行CFP盤查時，若發現某項原物料的投入量僅佔總質量的0.1%，但其LCI數據庫顯示為高毒性物質，此時應如何處理？", options: ["A. 根據質量百分比遠低於截斷準則，可直接忽略此項原料，不納入計算。", "B. 不可僅因質量小就忽略已知的高環境衝擊物質。", "C. 可將其排放量乘以其質量佔比(0.1%)後再計入，以反映其較低的貢獻度。", "D. 應立即要求供應商更換此原料，否則無法完成碳足跡計算。"], answer: "B", points: 2 },
-                { question: "在LCA中，處理回收材料時，採用「截斷法(Cut-off Approach)」或稱為「100-0分配法」，其核心假設是什麼？", options: ["A. 回收過程的環境效益由產生廢料的原始產品系統與使用再生料的新產品系統平均分攤。", "B. 回收的效益完全歸於產生廢料的原始產品系統，因為它提供了可回收的物料。", "C. 回收過程沒有任何環境衝擊，因此再生料可視為無負擔的原料。", "D. 回收的效益與負荷完全由下一個產品系統承擔。"], answer: "D", points: 2 },
-                { question: "若一家公司想宣告其某項服務達成「碳中和」，根據PAS 2060，其購買的碳權(offsets)必須滿足什麼條件？", options: ["A. 必須是市場上價格最便宜的碳權，以極大化降低企業的合規成本。", "B. 必須來自真實、額外、可驗證且永久的減量專案。", "C. 必須是來自公司內部自行執行的減量專案所產生的碳權，不可對外購買。", "D. 必須是預先購買的未來年份碳權，以應對公司未來的排放增長。"], answer: "B", points: 2 },
-                { question: "在CFP計算中，處理「運輸」排放時，若一批貨物未滿載(Less than Truckload)，應如何合理地考慮其排放？", options: ["A. 應以整輛卡車滿載的總排放來計算，因為卡車同樣跑了一趟，這是最保守的估計方式。", "B. 將卡車總排放按貨物重量或體積佔比分配。", "C. 不需計算此批貨物的運輸排放，因為不是專車運送，責任難以歸屬。", "D. 僅需計算貨物裝卸過程中，搬運設備所消耗的能源排放即可。"], answer: "B", points: 2 },
-                { question: "ISO 14067對於產品生命週期中「資本財(Capital Goods)」(如廠房、機器設備)的排放，建議如何處理？", options: ["A. 應將其整個生命週期的排放，透過折舊或使用年限等方式，分配攤提至單位產品上", "B. 因計算複雜，通常可被排除在系統邊界外，僅需在報告中說明即可。", "C. 僅需計算其日常維修與保養所消耗的能源與物料排放，無需考慮其製造階段。", "D. 資本財的排放應由其製造商完全負責，與產品使用者無關，因此不納入計算。"], answer: "A", points: 2 },
-                { question: "在LCA中，當一個農業產品的碳足跡計算涉及土壤碳儲存變化時，為何這是一個複雜的議題？", options: ["A. 因為土壤中幾乎不含有機碳，其儲存變化對總體碳足跡的影響可以忽略不計。", "B. 因為土壤碳的變化受耕作方式、氣候等多重因素影響，量測與模型模擬的變異性與不確定性高。", "C. 因為農夫通常不願意提供其詳細的耕作與土壤管理數據，導致數據收集困難。", "D. 因為目前所有的LCA軟體都尚未內建計算土壤碳變化的功能模組。"], answer: "B", points: 2 },
-                { question: "若一家公司透過製程優化，使其副產品的品質提升，從而可以替代市場上某個高環境衝擊的產品，在LCA中如何量化此效益？", options: ["A. 由於這是額外的效益，其影響難以量化，因此在LCA模型中通常不予考慮。", "B. 透過「系統擴張」，將被替代產品的生命週期納入模型，其所「避免的衝擊」可視為原系統的環境效益。", "C. 可以直接將該副產品的碳足跡計為一個負值，從總排放中扣除，以簡化計算。", "D. 僅需在公司的企業社會責任報告中，以文字描述此項改善成果，不需在LCA中量化。"], answer: "B", points: 2 },
-                { question: "一個PCR的制定過程通常需要「計畫營運者(Programme Operator)」，其主要職責為何？", options: ["A. 負責親自撰寫PCR的所有技術內容，並決定最終版本。", "B. 負責資助所有參與PCR制定的利害關係人的差旅與會議費用。", "C. 負責管理整個PCR的制定、審查、發布與維護流程，確保其公正與透明。", "D. 負責在PCR發布後，查證所有依此PCR進行的LCA研究是否正確。"], answer: "C", points: 2 },
-                { question: "在CFP研究中，若一個產品的「使用階段」佔了總碳足跡的80%，這對產品設計者有何啟示？", options: ["A. 應專注於降低原料的碳足跡，因為這是產品的物質基礎。", "B. 應專注於提升產品在使用階段的能源效率或改變其功能方式。", "C. 應增加產品的包裝，以保護產品，減少維修與更換的頻率。", "D. 應縮短產品的設計壽命，以加速產品汰換，促進新技術的應用。"], answer: "B", points: 2 },
-                { question: "下列何者是LCA與傳統環境影響評估(EIA)最顯著的區別？", options: ["A. EIA的評估範疇更廣，通常涵蓋產品的完整生命週期；而LCA僅針對單一專案。", "B. LCA的評估範疇更廣，涵蓋產品的完整生命週期；而EIA通常針對特定地點的單一開發專案(如建廠)。", "C. 兩者在評估方法與範疇上沒有任何本質上的區別，僅是應用領域不同。", "D. LCA僅評估空氣污染的衝擊，而EIA則評估所有類型的環境衝擊。"], answer: "B", points: 2 },
-                { question: "在進行敏感度分析時，若發現結果對於某個分配方法的選擇極度敏感，這代表什麼？", options: ["A. 這證明了該分配方法是唯一正確的選擇，因為它對結果有顯著影響。", "B. 這表示該產品不適合進行LCA分析，因為其結果過於不穩定。", "C. 分配是此研究的關鍵方法學議題，應在報告中詳細討論不同方法選擇的理由與其對結果的影響。", "D. 這通常代表計算過程必定存在嚴重的數學錯誤，應立即重新計算。"], answer: "C", points: 2 },
-                { question: "若一個產品的碳足跡計算結果要用於申請具有法律效力的碳稅減免，其查證過程可能會有何不同？", options: ["A. 由於涉及法律與財務，查證過程通常會更為寬鬆，以鼓勵企業參與。", "B. 查證的嚴謹度、數據的品質要求以及對不確定性的容忍度會遠高於一般自願性宣告。", "C. 此類應用通常不需要經過第三方查證，僅需企業自行宣告即可。", "D. 查證過程與一般自願性宣告完全相同，沒有任何差異。"], answer: "B", points: 2 },
-                { question: "在LCA中，為何一個看似環保的選擇(如用紙袋替代塑膠袋)不一定總體環境衝擊較低？", options: ["A. 因為紙袋的生產成本通常高於塑膠袋，經濟上不划算。", "B. 因為需要進行完整的LCA比較，紙袋在生產過程(伐木、製漿)可能消耗更多能源與水，產生更多水污染。", "C. 因為塑膠袋可以被重複使用無限次，而紙袋通常只能使用一次。", "D. 因為大多數消費者在心理上仍然偏好使用塑膠袋。"], answer: "B", points: 2 },
-                { question: "當一個LCA研究的目標是「內部決策支持」而非「外部溝通」時，其研究的嚴謹度可以較低嗎？", options: ["A. 是的，可以隨意估算，因為結果僅供內部參考，不需對外負責。", "B. 否，仍需遵循LCA原則，但數據品質要求或文件化程度可根據決策需求進行調整。", "C. 是的，完全不需要遵循任何國際標準，只要能得出結論即可。", "D. 否，所有LCA研究的要求都完全一樣，不因其應用目的而有任何不同。"], answer: "B", points: 2 },
-                { question: "在CFP研究中，若一個產品的生命終結方式在不同國家有顯著差異(如A國回收率高，B國以掩埋為主)，應如何處理？", options: ["A. 應使用全球回收率的平均值，以簡化計算。", "B. 應根據產品的預期銷售市場，採用各市場特定的廢棄處理情境進行加權平均或分別計算。", "C. 應選擇對計算結果最有利的情境(如100%回收)進行分析。", "D. 應忽略廢棄階段，因為其在不同國家的差異過大，無法進行準確計算。"], answer: "B", points: 2 },
-                { question: "為何在LCA中，單純的「質量平衡」不能保證數據的完全正確性？", options: ["A. 因為質量守恆定律在某些化學反應中並不完全適用。", "B. 因為即使總投入質量等於總輸出質量，內部各物質流的分配與轉換仍可能存在錯誤或未鑑別的逸散排放。", "C. 因為第三方查證員通常不相信企業提出的質量平衡數據。", "D. 因為用於測量質量的儀器總是有無法避免的系統誤差。"], answer: "B", points: 2 },
-                { question: "若一個產品的PCR尚未制定，企業若想進行CFP研究，最佳的第一步是什麼？", options: ["A. 等待競爭對手完成制定PCR後，再直接引用其結果。", "B. 由於缺乏依據，應立即放棄該產品的CFP研究計畫。", "C. 參考ISO 14027的指引，主導或參與發起一個新的PCR制定計畫。", "D. 隨意選用一個不相關但已有完整數據的PCR，以節省時間與成本。"], answer: "C", points: 2 },
-                { question: "在LCA中，將衝擊評估結果與社會、經濟或政治價值觀連結，以進行決策的過程，屬於哪個階段的工作？", options: ["A. 盤查分析 (LCI)，此階段專注於數據收集。", "B. 衝擊評估中的「加權(Weighting)」步驟。", "C. 目標與範疇界定 (Goal and Scope Definition)，此階段設定研究的基礎。", "D. 數據品質評估 (DQR)，此為評估數據可信度的過程。"], answer: "B", points: 2 },
-                { question: "一個產品的碳足跡數值，其本身是否能直接判斷該產品是「好」或「壞」？", options: ["A. 是的，數值越低代表產品越環保，因此越好。", "B. 否，數值僅是一個客觀的量化資訊，其「好壞」的判斷需在特定脈絡下才有意義。", "C. 是的，國際上已有明確標準，只要低於100kg CO2e就是公認的「好產品」。", "D. 否，因為這個數值主要用於學術研究，對現實世界沒有太大意義。"], answer: "B", points: 2 },
-                { question: "在處理一個包含服務與實體產品的複雜系統時(如含餐飲的航空服務)，定義「功能單位」時最大的挑戰是什麼？", options: ["A. 飛機的總重量與燃油消耗量難以準確測量。", "B. 如何將服務與產品的功能整合成一個單一、可量化且具代表性的單位。", "C. 航班上空服員的數量不固定，導致服務量難以標準化。", "D. 航空燃油的市場價格波動太大，影響經濟分配的穩定性。"], answer: "B", points: 2 },
-                { question: "根據CNS 14067，下列何者為「產品」的正確定義？", options: ["A. 僅指實體商品，不包含任何形式的服務。", "B. 僅指由專業人士提供的服務，不包含實體商品。", "C. 商品或服務。", "D. 僅指企業對消費者(B2C)的最終消費品，不包含企業對企業(B2B)的中間產品。"], answer: "C", points: 2 },
-                { question: "根據CNS 14067，何謂「聯產品(co-product)」？", options: ["A. 兩個不同工廠合作生產的相同產品。", "B. 任何來自同一單元過程或產品系統中的兩個或兩個以上之產品。", "C. 一個產品與其所有包裝材料的組合。", "D. 透過策略聯盟關係共同進行市場銷售的產品。"], answer: "B", points: 2 },
-                { question: "在LCA中，「參考流(reference flow)」的定義是什麼？", options: ["A. 指一個產品系統中，對環境衝擊貢獻最大的物質流。", "B. 滿足功能單位所需過程的投入或產出之量測值。", "C. 指產品生命週期中，碳排放量最高的那個特定流程。", "D. 指在比較不同產品時，作為計算基準的標準物質流量。"], answer: "B", points: 2 },
-                { question: "根據CNS 14067，「使用壽命(service life)」是指什麼？", options: ["A. 產品製造商所提供的保固期限。", "B. 產品從製造完成到最終廢棄的總時間長度。", "C. 使用中的產品滿足或超過其性能要求的期間。", "D. 消費者從購買到丟棄，實際持有該產品的時間。"], answer: "C", points: 2 },
-                { question: "在ISO 14060系列標準中，哪一個標準是專門針對「確證與查證機構」的要求事項？", options: ["A. ISO 14064-1，此為組織盤查標準。", "B. ISO 14064-3，此為確證與查證的指引。", "C. ISO 14065。", "D. ISO 14066，此為對查證小組適任性的要求。"], answer: "C", points: 2 },
-                { question: "在LCA中，何謂「基本流(elementary flow)」？", options: ["A. 從一個單元製程流向下一個單元製程的物質或能源。", "B. 從環境取用或排放至環境，未經人為轉換的物質或能源。", "C. 一個產品系統中最主要的原料輸入流。", "D. 所有在生命終結階段可被回收再利用的物質流。"], answer: "B", points: 2 },
-                { question: "根據我國環境部規定，申請碳足跡標籤時，查證聲明書的有效期限須在多久以上？", options: ["A. 至少需要6個月，以確保數據的時效性。", "B. 至少需要1年。", "C. 至少需要2年，與標籤效期同步。", "D. 至少需要3年，以展現企業長期承諾。"], answer: "B", points: 2 },
-                { question: "在LCA的衝擊評估中，「特徵化(Characterization)」這個步驟的目的是什麼？", options: ["A. 將盤查清單中的所有項目進行分類，歸入不同的衝擊類別。", "B. 將各類別的物質流轉換為共同的衝擊指標單位。", "C. 評估盤查數據的整體品質與不確定性。", "D. 根據專家意見或社會價值，為不同的環境衝擊類別賦予權重。"], answer: "B", points: 2 },
-                { question: "當一個產品的PCR尚未制定時，企業若想進行CFP研究並申請標籤，應採取的正確程序是？", options: ["A. 隨意選用一個最相近的PCR進行計算，並在報告中註明差異。", "B. 依循主管機關(如環境部)的指引，發起或參與一個新的PCR制定計畫。", "C. 放棄申請，等待其他公司完成制定後再引用。", "D. 自行定義計算規則，不需經過任何外部審查，直接送交查證。"], answer: "B", points: 2 },
-                { question: "在評估一項服務的碳足跡時(如一次顧問諮詢)，定義「功能單位」時最應考量的是？", options: ["A. 顧問公司的年度總收入，因為這反映了服務的經濟規模。", "B. 提供該服務所達成的特定、可量化的功能性成果。", "C. 參與該次顧問諮詢服務的總員工人數。", "D. 在整個服務過程中，所使用的紙張與電力等資源數量。"], answer: "B", points: 2 },
-                { question: "在盤查數據時，若某項活動數據來自於供應商提供的年度報告，此數據應歸類為？", options: ["A. 場址特定數據，因為它來自於特定的供應商場址。", "B. 一級數據，但非場址特定數據。", "C. 二級數據，因為它並非由研究者為此特定研究直接量測。", "D. 代理數據，因為它替代了直接量測。"], answer: "B", points: 2 },
-                { question: "我國產品碳足跡資訊網所提供的「公用碳排放係數」，其主要特性為何？", options: ["A. 這些係數僅適用於特定高科技產業，不適用於傳統產業。", "B. 這些係數皆為全球平均值，以與國際接軌。", "C. 具有生命週期評估特性(LCA-based)。", "D. 這些係數僅包含直接排放(範疇一)，不包含間接排放。"], answer: "C", points: 2 },
-                { question: "在碳足跡計算中，若一家公司使用自產的太陽能電力，其電力排放係數應如何決定？", options: ["A. 由於是再生能源，可以直接視為零排放。", "B. 應採用全國電網的平均排放係數，以維持計算一致性。", "C. 應進行太陽能板的LCA，計算其生命週期的攤提排放。", "D. 應採用天然氣發電的排放係數作為保守估計值。"], answer: "C", points: 2 }
-            ],
-            multipleChoice: [
-                // 複選題 (50題, 每題2分) - 深度優化
-                { question: "(複選) 根據ISO 14067，一個完整的產品碳足跡(CFP)研究報告，應分別記錄下列哪些溫室氣體數值？", options: ["A. 源自化石燃料的淨排放與移除量", "B. 產品的建議市場售價", "C. 源自生物質的淨排放與移除量", "D. 產品的總重量與體積", "E. 來自直接土地利用變遷(dLUC)的排放與移除量"], answer: ["A", "C", "E"], points: 2 },
-                { question: "(複選) 進行生命週期評估(LCA)時，數據品質的評估至關重要。下列哪些屬於ISO 14044所建議的數據品質要求事項？", options: ["A. 數據的來源與出處", "B. 地理涵蓋範圍的代表性", "C. 執行LCA分析師的薪資水平", "D. 技術涵蓋範圍的相關性", "E. 時間涵蓋範圍的一致性"], answer: ["A", "B", "D", "E"], points: 2 },
-                { question: "(複選) 在設定LCA的「目標與範疇」時，下列哪些項目是必須明確界定的？", options: ["A. 產品系統的功能單位或宣告單位", "B. 預期的溝通對象與應用方式", "C. 系統邊界與截斷準則", "D. 執行該研究的總預算", "E. 分配程序的基本原則"], answer: ["A", "B", "C", "E"], points: 2 },
-                { question: "(複選) 產品生命週期通常包含多個階段，下列哪些屬於ISO 14067所定義的典型生命週期階段？", options: ["A. 企業的年度財務審計", "B. 原料取得", "C. 製造", "D. 產品行銷與廣告", "E. 生命終結處理"], answer: ["B", "C", "E"], points: 2 },
-                { question: "(複選) 根據ISO 14067，下列哪些關於「碳抵換(Carbon Offsetting)」的敘述是正確的？", options: ["A. 碳抵換是指在產品系統之外進行減量或移除。", "B. 企業可將購買的碳權直接從CFP計算結果中扣除。", "C. 碳抵換的相關資訊應與CFP數值分開報告。", "D. 宣告產品達成碳中和時，通常涉及碳抵換。", "E. 所有LCA研究都必須包含碳抵換的評估。"], answer: ["A", "C", "D"], points: 2 },
-                { question: "(複選) 建立「產品類別規則(PCR)」的主要目的包含下列哪些？", options: ["A. 確保同類產品LCA計算方法論的一致性。", "B. 限制特定產品類別的市場競爭者數量。", "C. 降低LCA研究的複雜性與執行門檻。", "D. 增加第三方查證的透明度與可信度。", "E. 規範特定產品類別應揭露的環境資訊。"], answer: ["A", "C", "D", "E"], points: 2 },
-                { question: "(複選) 在LCA的闡釋(Interpretation)階段，通常會執行哪些分析工作？", options: ["A. 鑑別主要貢獻來源，即「熱點分析」。", "B. 進行敏感度分析。", "C. 評估研究的完整性與一致性。", "D. 重新收集所有的一級數據。", "E. 提出結論、限制與建議。"], answer: ["A", "B", "C", "E"], points: 2 },
-                { question: "(複選) 下列哪些屬於溫室氣體盤查議定書(GHG Protocol)所定義的七種主要溫室氣體？", options: ["A. 二氧化碳 (CO2)", "B. 甲烷 (CH4)", "C. 臭氧 (O3)", "D. 氧化亞氮 (N2O)", "E. 六氟化硫 (SF6)"], answer: ["A", "B", "D", "E"], points: 2 },
-                { question: "(複選) 在處理多功能性問題時，ISO 14044建議的分配程序層級(hierarchy)包含哪些步驟？", options: ["A. 步驟一：透過劃分單元製程或系統擴張來避免分配。", "B. 步驟二：依據系統間的物理關係進行分配。", "C. 步驟三：依據其他關係(如經濟價值)進行分配。", "D. 優先採用市場上最普遍的分配方法。", "E. 永遠將所有環境負荷分配給經濟價值最高的產品。"], answer: ["A", "B", "C"], points: 2 },
-                { question: "(複選) 進行產品碳足跡績效追蹤(performance tracking)時，為確保比較的有效性，必須維持哪些要素的一致性？", options: ["A. 功能單位或宣告單位", "B. 系統邊界", "C. 分配方法", "D. 執行研究的LCA分析師", "E. 使用的背景資料庫版本"], answer: ["A", "B", "C", "E"], points: 2 },
-                { question: "(複選) 下列哪些是導致LCA結果不確定性的主要來源？", options: ["A. 參數不確定性，例如排放係數的統計變異。", "B. 模型不確定性，例如選擇不同的分配方法。", "C. 報告的印刷品質與排版美觀程度。", "D. 情境不確定性，例如對未來的假設。", "E. 查證員的個人偏好。"], answer: ["A", "B", "D"], points: 2 },
-                { question: "(複選) 根據ISO 14067，在評估電力消耗的排放時，可能需要考慮哪些環節？", options: ["A. 發電過程中的直接燃燒排放。", "B. 燃料開採與運輸至電廠的上游排放。", "C. 輸電與配電過程中的電力損耗。", "D. 發電廠房建設所使用的水泥與鋼鐵的排放。", "E. 電力公司員工的通勤排放。"], answer: ["A", "B", "C", "D"], points: 2 },
-                { question: "(複選) 一份高品質的LCA研究，其透明度原則體現在哪些方面？", options: ["A. 清楚揭露所使用的所有數據來源。", "B. 明確說明所有重要的假設與模型選擇。", "C. 公開研究的限制與不確定性。", "D. 隱藏對研究結果不利的數據。", "E. 提供足夠的資訊讓第三方能評估研究過程。"], answer: ["A", "B", "C", "E"], points: 2 },
-                { question: "(複選) 在評估一個電子產品的碳足跡時，其生命終結(End-of-Life)階段可能包含哪些處理過程？", options: ["A. 消費者將廢棄產品送至回收站。", "B. 拆解、粉碎與分類不同材質。", "C. 貴金屬的回收再利用。", "D. 無法回收的塑膠部件進行焚化或掩埋。", "E. 新產品的市場行銷活動。"], answer: ["A", "B", "C", "D"], points: 2 },
-                { question: "(複選) 申請我國的產品碳足跡標籤，通常需要經過哪些主要程序？", options: ["A. 依據適用的PCR進行產品碳足跡計算。", "B. 撰寫碳足跡研究報告書。", "C. 聘請經認可的第三方查驗機構進行查證。", "D. 承諾未來將執行減碳計畫。", "E. 繳交一筆與碳排放量成正比的稅金。"], answer: ["A", "B", "C", "D"], points: 2 },
-                { question: "(複選) 下列哪些是生命週期評估(LCA)的潛在應用領域？", options: ["A. 支援產品的綠色設計與研發。", "B. 作為企業制定永續策略的依據。", "C. 協助政府機關制定環保政策與法規。", "D. 提供消費者綠色採購的量化資訊。", "E. 作為公司唯一的財務績效評估工具。"], answer: ["A", "B", "C", "D"], points: 2 },
-                { question: "(複選) 在進行CFP盤查時，下列哪些項目屬於需要收集的「活動數據」？", options: ["A. 投入製程的原料公斤數", "B. IPCC發布的全球暖化潛勢(GWP)值", "C. 工廠該年度的總用電度數", "D. 貨物運輸的總公里數", "E. 國家公布的電力排放係數"], answer: ["A", "C", "D"], points: 2 },
-                { question: "(複選) 根據ISO 14067，下列哪些關於「生物質碳(Biogenic Carbon)」的處理方式是正確的？", options: ["A. 產品中儲存的生物質碳含量，應在報告中分別記錄。", "B. 生物質在生長過程中從大氣中移除的CO2，應在LCA模型中體現。", "C. 生物質在生命終結階段(如焚化)釋放的CO2，應在LCA模型中體現。", "D. 生物質碳的排放與移除，不應與化石碳的排放與移除混在一起計算。", "E. 在LCA中可完全忽略生物質碳的影響。"], answer: ["A", "B", "C", "D"], points: 2 },
-                { question: "(複選) 一個LCA研究的「關鍵性審查(Critical Review)」其目的為何？", options: ["A. 確保研究方法與ISO 14040/14044標準的要求一致。", "B. 確保研究的數據、假設與結論具有科學可信度。", "C. 若研究涉及對外公開的比較性宣告，則此審查為強制性要求。", "D. 增加研究的執行成本。", "E. 幫助研究者找出報告中的錯別字與語法錯誤。"], answer: ["A", "B", "C"], points: 2 },
-                { question: "(複選) 下列哪些情境，適合以「宣告單位(Declared Unit)」而非「功能單位(Functional Unit)」作為量化參考？", options: ["A. 比較A、B兩種不同品牌洗衣機清洗5公斤衣物的環境績效。", "B. 一家鋼鐵廠要提供其生產的「每公噸熱軋鋼捲」的碳足跡數據給下游廠商。", "C. 一家化工廠要計算「每公斤特定化學中間體」的環境負荷。", "D. 比較紙杯與馬克杯提供「飲用300ml咖啡」功能的生命週期衝擊。", "E. 評估「每平方公尺特定規格的地毯」在製造階段的碳足跡。"], answer: ["B", "C", "E"], points: 2 },
-                { question: "(複選) 在LCA中，數據的「時間代表性」非常重要，下列哪些作法有助於確保時間代表性？", options: ["A. 盡可能使用與研究期間(例如2023年)相近的活動數據與排放係數。", "B. 若使用較早期的數據，應在報告中說明其可能與現況的差異及不確定性。", "C. 對於技術變動快速的產業(如電子業)，應避免使用超過五年的背景數據。", "D. 所有研究都應統一使用2006年IPCC的數據。", "E. 數據的年代越久遠，代表經過越長時間的驗證，因此品質越高。"], answer: ["A", "B", "C"], points: 2 },
-                { question: "(複選) 歐盟的碳邊境調整機制(CBAM)在過渡期內，要求進口商申報的資訊主要包含哪些？", options: ["A. 進口產品的數量", "B. 產品內含的直接與間接排放量", "C. 進口商的公司總部地址。", "D. 在原產國已支付的碳價", "E. 產品的建議零售價。"], answer: ["A", "B", "D"], points: 2 },
-                { question: "(複選) 下列哪些是執行產品碳足跡盤查可能為企業帶來的內部效益？", options: ["A. 鑑別製程中的能源與原物料浪費，從而降低營運成本。", "B. 透過數據分析，發現供應鏈中的高風險或高排放環節，以進行供應鏈優化。", "C. 為產品的綠色設計與創新提供量化依據。", "D. 提升員工的環境意識與對公司的認同感。", "E. 保證公司股價立即上漲。"], answer: ["A", "B", "C", "D"], points: 2 },
-                { question: "(複選) 在LCA中，處理回收材料時，可能涉及的分配方法或模型有哪些？", options: ["A. 截斷法 (Cut-off approach)", "B. 50/50分配法", "C. 避免負擔法 (Avoided burden approach)", "D. 經濟價值分配法", "E. 隨機分配法。"], answer: ["A", "B", "C", "D"], points: 2 },
-                { question: "(複選) 一份完整的PCR文件，通常會包含哪些內容？", options: ["A. 產品的定義與分類", "B. 該產品類別應遵循的功能單位與系統邊界", "C. 數據收集要求與品質規定", "D. 必須採用的衝擊評估類別與計算規則", "E. 該類別所有產品的市場價格列表。"], answer: ["A", "B", "C", "D"], points: 2 },
-                { question: "(複選) 下列哪些關於ISO 14064-1(組織層級盤查)與ISO 14067(產品層級盤查)的比較是正確的？", options: ["A. ISO 14064-1的盤查邊界是組織的營運控制權或股權比例。", "B. ISO 14067的盤查邊界是產品的完整生命週期。", "C. 兩者都必須計算範疇一、二、三的排放。", "D. ISO 14064-1的結果以組織年度總排放量呈現。", "E. ISO 14067的結果以每功能單位的排放量呈現。"], answer: ["A", "B", "D", "E"], points: 2 },
-                { question: "(複選) 在評估一項服務(例如一次雲端運算服務)的碳足跡時，系統邊界內應考慮哪些排放源？", options: ["A. 支援服務運行的資料中心的電力消耗。", "B. 資料中心伺服器的製造與運輸。", "C. 資料中心冷卻系統的冷媒逸散。", "D. 使用者終端設備(如電腦)的電力消耗。", "E. 服務提供商的行銷部門辦公室租金。"], answer: ["A", "B", "C", "D"], points: 2 },
-                { question: "(複選) 根據ISO 14044，在進行LCA比較性研究並對外公開時，下列哪些是建議或要求的做法？", options: ["A. 確保比較的產品具有相同的功能單位與系統邊界。", "B. 採用一致的衝擊評估方法與數據來源。", "C. 對研究進行獨立的關鍵性審查。", "D. 僅呈現對自身產品有利的數據。", "E. 在報告中清楚說明比較的限制與假設。"], answer: ["A", "B", "C", "E"], points: 2 },
-                { question: "(複選) 在LCA中，所謂的「衝擊轉移(Burden Shifting)」可能發生在哪些維度之間？", options: ["A. 在不同的生命週期階段之間轉移。", "B. 在不同的環境衝擊類別之間轉移。", "C. 在不同的地理區域之間轉移。", "D. 在不同的產品世代之間轉移。", "E. 在不同的LCA軟體之間轉移。"], answer: ["A", "B", "C", "D"], points: 2 },
-                { question: "(複選) 在盤查製造階段的活動數據時，下列哪些文件或紀錄是重要的一級數據來源？", options: ["A. 電費單與天然氣帳單", "B. 原料採購單與領料單", "C. 廢棄物清運聯單", "D. 生產日報表或ERP系統紀錄", "E. 公司發布的年度永續報告書。"], answer: ["A", "B", "C", "D"], points: 2 },
-                { question: "(複選) 下列哪些因素會影響運輸階段碳足跡計算的準確性？", options: ["A. 運輸工具的類型(如卡車、火車、貨船、飛機)", "B. 運輸的距離", "C. 貨物的重量或體積", "D. 運輸工具的燃料種類與效率", "E. 司機的年齡與性別。"], answer: ["A", "B", "C", "D"], points: 2 },
-                { question: "(複選) 進行敏感度分析時，通常會針對哪些參數或假設進行測試？", options: ["A. 貢獻度最高或不確定性最高的排放係數", "B. 不同的分配方法選擇", "C. 不同的廢棄處理情境(如回收率的高低)", "D. 報告的字體大小與顏色。", "E. 產品的使用年限假設"], answer: ["A", "B", "C", "E"], points: 2 },
-                { question: "(複選) 根據我國環境部「產品碳足跡管理要點」，下列哪些是查證機構需要具備的資格？", options: ["A. 必須是上市櫃公司。", "B. 需取得國際認證論壇(IAF)會員資格的認證機構所核發的認證。", "C. 查證員必須通過政府舉辦的統一考試。", "D. 需將認證作業計畫書送交環境部備查。", "E. 總公司必須設立在首都。"], answer: ["B", "D"], points: 2 },
-                { question: "(複選) 在評估一項建築物的LCA時，其「使用階段」應考慮哪些主要的排放源？", options: ["A. 建築物營運期間的空調與照明耗能。", "B. 定期的維護、修繕與更換建材的衝擊。", "C. 建築物內使用者的通勤交通。", "D. 建築物拆除後的廢棄物處理。", "E. 營建初期的鋼筋水泥生產。"], answer: ["A", "B"], points: 2 },
-                { question: "(複選) 下列哪些是「產品類別規則(PCR)」的計畫營運者(Programme Operator)的主要職責？", options: ["A. 負責撰寫PCR的所有技術內容。", "B. 管理PCR的制定、審查、發布與維護流程。", "C. 確保PCR制定過程的公正性與透明度。", "D. 協調利害關係人的參與及意見溝通。", "E. 查證所有依據該PCR完成的碳足跡報告。"], answer: ["B", "C", "D"], points: 2 },
-                { question: "(複選) 在LCA中，當處理一個包含多種材料的複雜產品時，建立物料清單(BOM)後，下一步關鍵工作為何？", options: ["A. 繪製詳細的製程流程圖，連結所有單元過程。", "B. 為每個單元過程設定系統邊界。", "C. 收集每個單元過程的輸入與輸出數據。", "D. 選擇適當的LCA軟體與資料庫。", "E. 立即開始撰寫最終報告的結論。"], answer: ["A", "B", "C", "D"], points: 2 },
-                { question: "(複選) 下列哪些是ISO 14067標準中提到的，關於CFP研究報告應具備的特質？", options: ["A. 報告結果應以無偏見的方式呈現。", "B. 應以透明且具備充足細節的方式呈現，讓讀者能理解其複雜性。", "C. 報告的類型與格式應在目標與範疇界定階段就予以界定。", "D. 報告內容應盡量簡化，避免揭露過多假設與限制。", "E. 應允許生命週期闡釋結果，得以在與研究目標一致的方式下被使用。"], answer: ["A", "B", "C", "E"], points: 2 },
-                { question: "(複選) 在評估紙製品的碳足跡時，下列哪些因素是重要的考量點？", options: ["A. 木材原料是否來自永續認證的森林。", "B. 製漿過程的能源與水資源消耗。", "C. 再生紙漿的使用比例。", "D. 廢紙的回收率與回收處理過程的衝擊。", "E. 紙張的白度與磅數。"], answer: ["A", "B", "C", "D"], points: 2 },
-                { question: "(複選) 根據GHG Protocol，企業的溫室氣體排放被分為三個範疇，下列敘述哪些是正確的？", options: ["A. 範疇一包含來自公司擁有或控制的排放源的直接排放。", "B. 範疇二包含公司外購電力、熱或蒸汽所產生的間接排放。", "C. 範疇三包含公司價值鏈中所有其他間接排放。", "D. 計算產品碳足跡時，通常只考慮範疇一的排放。", "E. 企業可以自行決定是否要盤查範疇三的排放。"], answer: ["A", "B", "C"], points: 2 },
-                { question: "(複選) 在進行CFP研究時，若需要使用二級數據，選擇數據來源時應考量哪些面向的代表性？", options: ["A. 技術代表性：資料庫中的製程技術是否與研究對象相似。", "B. 地理代表性：數據來源的地理區域是否與研究對象的供應鏈相符。", "C. 時間代表性：數據的年份是否能反映現況。", "D. 供應商代表性。", "E. 價格代表性。"], answer: ["A", "B", "C"], points: 2 },
-                { question: "(複選) 在LCA中，下列哪些是處理多功能性(multi-functionality)問題的可能方法？", options: ["A. 避免分配，透過將單元製程劃分為更小的子流程。", "B. 避免分配，透過系統擴張(system expansion)。", "C. 進行分配，依據物理關係(如質量、能量)。", "D. 進行分配，依據其他關係(如經濟價值)。", "E. 忽略此問題。"], answer: ["A", "B", "C", "D"], points: 2 },
-                { question: "(複選) 下列哪些關於「功能單位(Functional Unit)」的敘述是正確的？", options: ["A. 功能單位是產品系統性能的量化參考。", "B. 它可以確保在比較不同產品系統時，比較的基礎是公平的。", "C. 功能單位的定義應清楚、可量測且與研究目標相關。", "D. 對於一個B2B的中間產品，通常會使用「宣告單位」而非功能單位。", "E. 功能單位就是指產品的單一銷售包裝。"], answer: ["A", "B", "C", "D"], points: 2 },
-                { question: "(複選) 企業導入產品碳足跡管理，可能面臨的挑戰包含哪些？", options: ["A. 取得完整且品質可靠的供應鏈數據。", "B. 需要投入額外的人力、時間與財務資源。", "C. 缺乏適用的產品類別規則(PCR)。", "D. 需要跨部門的溝通與協調。", "E. 盤查後發現碳排放量過高，影響品牌形象。"], answer: ["A", "B", "C", "D", "E"], points: 2 },
-                { question: "(複選) 在評估一項食品(如一塊麵包)的碳足跡時，其「原料取得」階段應包含哪些過程？", options: ["A. 小麥的種植，包含肥料、農藥與灌溉。", "B. 麵粉的研磨與加工。", "C. 糖、鹽、酵母等其他配料的生產。", "D. 將上述原料運輸至麵包工廠。", "E. 麵包在零售店的陳列與銷售。"], answer: ["A", "B", "C", "D"], points: 2 },
-                { question: "(複選) 下列哪些是ISO 14067標準中，關於「部分碳足跡(Partial CFP)」的正確描述？", options: ["A. 它是指一個產品生命週期中，一個或多個選定階段的碳足跡總和。", "B. 「搖籃到大門」的評估就是一種常見的部分碳足跡。", "C. 部分碳足跡通常使用「宣告單位」作為量化參考。", "D. 多個不重疊的部分碳足跡，在方法一致的前提下，可以加總以量化完整的CFP。", "E. 部分碳足跡的研究在B2B溝通中沒有價值。"], answer: ["A", "B", "C", "D"], points: 2 },
-                { question: "(複選) 在LCA中，若要評估產品對「酸化(Acidification)」的潛在衝擊，盤查清單中應關注哪些物質的排放？", options: ["A. 二氧化硫 (SO2)", "B. 氮氧化物 (NOx)", "C. 甲烷 (CH4)", "D. 氨 (NH3)", "E. 氯氟烴 (CFCs)"], answer: ["A", "B", "D"], points: 2 },
-                { question: "(複選) 下列哪些國際倡議或法規與企業的碳管理密切相關？", options: ["A. 科學基礎減碳目標倡議 (SBTi)", "B. 歐盟碳邊境調整機制 (CBAM)", "C. RE100 再生能源倡議", "D. 國際人權法", "E. 聯合國永續發展目標 (SDGs)"], answer: ["A", "B", "C", "E"], points: 2 },
-                { question: "(複選) 進行碳足跡盤查時，若遇到數據缺口(Data Gap)，下列哪些是可被接受的處理方式？", options: ["A. 使用性質相似製程的數據(代理數據)進行替代，並說明其不確定性。", "B. 根據物理或化學原理進行工程估算。", "C. 參考相關文獻或產業報告中的數據。", "D. 在報告中誠實揭露此數據缺口，並評估其對整體結果的可能影響。", "E. 為了使數據完整，直接編造一個看起來合理的數值。"], answer: ["A", "B", "C", "D"], points: 2 },
-                { question: "(複選) 一個產品的碳足跡數值高低，會受到下列哪些因素的影響？", options: ["A. 產品的設計與所用材料", "B. 生產製程的能源效率", "C. 供應鏈的地理分佈與運輸方式", "D. 消費者的使用習慣與廢棄處理方式", "E. 產品的品牌知名度"], answer: ["A", "B", "C", "D"], points: 2 }
-            ]
-        };
+      <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+        <div class="flex justify-between items-center mb-2">
+          <p class="text-sm font-semibold text-green-600 dark:text-green-400">
+            問題 <span id="question-number"></span> / 50
+          </p>
+          <div id="timer" class="text-lg font-bold text-red-500">90:00</div>
+        </div>
+        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+          <div id="progress-bar" class="bg-green-500 h-2.5 rounded-full transition-all duration-500" style="width:0%"></div>
+        </div>
+      </div>
 
-        // DOM Elements
-        const startScreen = document.getElementById('start-screen');
-        const quizScreen = document.getElementById('quiz-screen');
-        const resultScreen = document.getElementById('result-screen');
-        const startBtn = document.getElementById('start-btn');
-        const questionNumberEl = document.getElementById('question-number');
-        const progressBar = document.getElementById('progress-bar');
-        const questionTextEl = document.getElementById('question-text');
-        const optionsContainer = document.getElementById('options-container');
-        const nextBtn = document.getElementById('next-btn');
-        const prevBtn = document.getElementById('prev-btn');
-        const finalScoreEl = document.getElementById('final-score');
-        const scoreMessageEl = document.getElementById('score-message');
-        const restartBtn = document.getElementById('restart-btn');
-        const answerKey = document.getElementById('answer-key');
-        const timerEl = document.getElementById('timer');
-        const resultTitleEl = document.getElementById('result-title');
-        const resultSubtitleEl = document.getElementById('result-subtitle');
-        const questionNav = document.getElementById('question-nav');
-        const confirmModal = document.getElementById('confirm-modal');
-        const confirmMsgEl = document.getElementById('confirm-msg');
-        const confirmSubmitBtn = document.getElementById('confirm-submit-btn');
-        const cancelSubmitBtn = document.getElementById('cancel-submit-btn');
+      <div id="question-text" class="text-xl md:text-2xl font-bold my-6 min-h-[6rem]"></div>
+      <div id="options-container" class="space-y-4"></div>
 
-        // Quiz State
-        let quizQuestions = [];
-        let currentQuestionIndex = 0;
-        let userAnswers = [];
-        let timerInterval = null;
-        const TOTAL_QUESTIONS = 50;
-        const TOTAL_POINTS = 100; // 30*2 + 20*2
-        const TIME_LIMIT_MINUTES = 90;
+      <div class="flex justify-between mt-8">
+        <button id="prev-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg text-lg transition-transform transform hover:scale-105 shadow-md">上一題</button>
+        <button id="next-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition-transform transform hover:scale-105 shadow-md">下一題</button>
+      </div>
+    </div>
 
-        // Functions
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-        }
+    <!-- ====== Result Screen ====== -->
+    <div id="result-screen" class="hidden bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-2xl">
+      <h2 id="result-title" class="text-3xl font-bold text-center mb-2">測驗結束！</h2>
+      <p id="result-subtitle" class="text-lg text-center text-gray-600 dark:text-gray-400 mb-4"></p>
+      <p id="final-score" class="text-5xl font-bold text-center text-green-600 dark:text-green-400 mb-6"></p>
+      <p id="score-message" class="text-lg text-center text-gray-600 dark:text-gray-400 mb-8"></p>
 
-        function selectQuizQuestions() {
-            const singleChoiceBank = [...questionBank.singleChoice];
-            const multipleChoiceBank = [...questionBank.multipleChoice];
+      <div class="text-center mb-8">
+        <button id="restart-btn" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-xl transition-transform transform hover:scale-105 shadow-lg">
+          再次測驗
+        </button>
+      </div>
 
-            shuffleArray(singleChoiceBank);
-            shuffleArray(multipleChoiceBank);
+      <div id="answer-key-container">
+        <h3 class="text-2xl font-bold mb-4 border-b-2 border-gray-200 dark:border-gray-600 pb-2">答案詳解</h3>
+        <div id="answer-key" class="space-y-6 max-h-[50vh] overflow-y-auto pr-2"></div>
+      </div>
+    </div>
+  </div>
 
-            const selectedSingle = singleChoiceBank.slice(0, 30);
-            const selectedMultiple = multipleChoiceBank.slice(0, 20);
+  <!-- ====== 提交確認 Modal ====== -->
+  <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl text-center w-11/12 md:w-1/3">
+      <p id="confirm-msg" class="text-lg mb-6"></p>
+      <div class="flex justify-center">
+        <button id="confirm-submit-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg mr-4">確認提交</button>
+        <button id="cancel-submit-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-lg">取消</button>
+      </div>
+    </div>
+  </div>
 
-            quizQuestions = [...selectedSingle, ...selectedMultiple];
-            shuffleArray(quizQuestions); 
-        }
-
-        function startTimer(duration) {
-            let timeLeft = duration;
-            timerInterval = setInterval(() => {
-                const minutes = Math.floor(timeLeft / 60);
-                let seconds = timeLeft % 60;
-                seconds = seconds < 10 ? '0' + seconds : seconds;
-                timerEl.textContent = `${minutes}:${seconds}`;
-                timeLeft--;
-
-                if (timeLeft < 0) {
-                    clearInterval(timerInterval);
-                    processAndShowResults(true); 
-                }
-            }, 1000);
-        }
-
-        function startQuiz() {
-            selectQuizQuestions();
-            currentQuestionIndex = 0;
-            userAnswers = new Array(TOTAL_QUESTIONS).fill(null);
-            quizQuestions.forEach((q, i) => {
-                if(q.answer instanceof Array) {
-                    userAnswers[i] = [];
-                }
-            });
-
-            clearInterval(timerInterval);
-            
-            startScreen.classList.add('hidden');
-            resultScreen.classList.add('hidden');
-            quizScreen.classList.remove('hidden');
-            
-            buildQuestionNav();
-            goToQuestion(0);
-            startTimer(TIME_LIMIT_MINUTES * 60);
-        }
-        
-        function buildQuestionNav() {
-            questionNav.innerHTML = '';
-            for (let i = 0; i < quizQuestions.length; i++) {
-                const navBtn = document.createElement('button');
-                navBtn.textContent = i + 1;
-                navBtn.classList.add('nav-btn');
-                navBtn.onclick = () => {
-                    goToQuestion(i);
-                };
-                questionNav.appendChild(navBtn);
-            }
-        }
-
-        function updateQuestionNav() {
-            const navBtns = questionNav.querySelectorAll('.nav-btn');
-            navBtns.forEach((btn, index) => {
-                btn.classList.remove('current', 'answered');
-                const answer = userAnswers[index];
-                const hasAnswered = (answer instanceof Array) ? answer.length > 0 : answer !== null;
-                if (hasAnswered) {
-                    btn.classList.add('answered');
-                }
-                if (index === currentQuestionIndex) {
-                    btn.classList.add('current');
-                }
-            });
-        }
-
-        function goToQuestion(index) {
-            if (index < 0 || index >= quizQuestions.length) return;
-            currentQuestionIndex = index;
-            displayQuestion();
-        }
-
-        function displayQuestion() {
-            updateQuestionNav();
-            const question = quizQuestions[currentQuestionIndex];
-            const userAnswer = userAnswers[currentQuestionIndex];
-            
-            questionNumberEl.textContent = `${currentQuestionIndex + 1} / ${TOTAL_QUESTIONS}`;
-            progressBar.style.width = `${((currentQuestionIndex + 1) / quizQuestions.length) * 100}%`;
-            
-            const isMultipleChoice = Array.isArray(question.answer);
-            questionTextEl.textContent = question.question;
-
-            optionsContainer.innerHTML = '';
-            
-            question.options.forEach(option => {
-                const optionChar = option.charAt(0);
-                const optionWrapper = document.createElement('div');
-
-                if (isMultipleChoice) {
-                    optionWrapper.innerHTML = `
-                        <input type="checkbox" id="option-${optionChar}" name="option" value="${optionChar}" class="hidden option-checkbox">
-                        <label for="option-${optionChar}" class="option-label border-gray-300 dark:border-gray-600">${option}</label>
-                    `;
-                    const checkbox = optionWrapper.querySelector('input');
-                    if (userAnswer.includes(optionChar)) {
-                        checkbox.checked = true;
-                    }
-                    checkbox.onchange = () => {
-                        const selectedOptions = Array.from(optionsContainer.querySelectorAll('input:checked')).map(cb => cb.value);
-                        userAnswers[currentQuestionIndex] = selectedOptions;
-                        updateQuestionNav();
-                    };
-                } else {
-                    const button = document.createElement('button');
-                    button.textContent = option;
-                    button.classList.add('option-btn', 'w-full', 'p-4', 'text-left', 'border-2', 'border-gray-300', 'dark:border-gray-600', 'rounded-lg', 'transition-colors', 'duration-200', 'hover:bg-blue-100', 'dark:hover:bg-gray-700');
-                    if (optionChar === userAnswer) {
-                        button.classList.add('selected');
-                    }
-                    button.onclick = () => {
-                        document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
-                        button.classList.add('selected');
-                        userAnswers[currentQuestionIndex] = optionChar;
-                        updateQuestionNav();
-                    };
-                    optionWrapper.appendChild(button);
-                }
-                optionsContainer.appendChild(optionWrapper);
-            });
-            
-            prevBtn.disabled = currentQuestionIndex === 0;
-            if (currentQuestionIndex === quizQuestions.length - 1) {
-                nextBtn.textContent = '提交試卷';
-            } else {
-                nextBtn.textContent = '下一題';
-            }
-        }
-        
-        function handleNav(direction) {
-            const newIndex = currentQuestionIndex + direction;
-            if (newIndex >= 0 && newIndex < quizQuestions.length) {
-                goToQuestion(newIndex);
-            }
-        }
-        
-        function handleSubmit() {
-            if (currentQuestionIndex === quizQuestions.length - 1) {
-                const unansweredCount = userAnswers.filter(ans => ans === null || (Array.isArray(ans) && ans.length === 0)).length;
-                let confirmMsg = '您確定要提交試卷嗎？提交後將無法修改。';
-                if (unansweredCount > 0) {
-                    confirmMsg = `您還有 ${unansweredCount} 題未作答，確定要提交試卷嗎？`;
-                }
-                confirmMsgEl.textContent = confirmMsg;
-                confirmModal.classList.remove('hidden');
-            } else {
-                handleNav(1);
-            }
-        }
-
-        function processAndShowResults(timeUp = false) {
-            clearInterval(timerInterval);
-            let totalScore = 0;
-            quizQuestions.forEach((question, index) => {
-                const userAnswer = userAnswers[index];
-                const correctAnswer = question.answer;
-                
-                if (Array.isArray(correctAnswer)) { // 複選題計分
-                    const userSet = new Set(userAnswer);
-                    const correctSet = new Set(correctAnswer);
-                    
-                    let correctlySelected = 0;
-                    userSet.forEach(ans => {
-                        if (correctSet.has(ans)) {
-                            correctlySelected++;
-                        }
-                    });
-
-                    const incorrectlySelected = userSet.size - correctlySelected;
-                    const missedCorrect = correctSet.size - correctlySelected;
-                    const errors = incorrectlySelected + missedCorrect;
-
-                    if (errors === 0) {
-                        totalScore += 2;
-                    } else if (errors === 1) {
-                        totalScore += 1;
-                    } // errors >= 2 gets 0 points
-                } else { // 單選題計分
-                    if (userAnswer === correctAnswer) {
-                        totalScore += 2;
-                    }
-                }
-            });
-
-            progressBar.style.width = '100%';
-            quizScreen.classList.add('hidden');
-            resultScreen.classList.remove('hidden');
-            
-            if (timeUp) {
-                resultTitleEl.textContent = "時間到！";
-                resultSubtitleEl.textContent = "測驗已自動提交。";
-            } else {
-                resultTitleEl.textContent = "測驗結束！";
-                resultSubtitleEl.textContent = "";
-            }
-
-            finalScoreEl.textContent = `${totalScore} / ${TOTAL_POINTS} 分`;
-
-            let percentage = (totalScore / TOTAL_POINTS) * 100;
-            let message = '';
-            if (percentage >= 90) {
-                message = '表現卓越！您已是碳足跡領域的頂尖專家！';
-            } else if (percentage >= 75) {
-                message = '成績優異！您對碳足跡的核心概念掌握得非常扎實。';
-            } else if (percentage >= 60) {
-                message = '不錯的成績！您已具備良好的基礎，繼續努力！';
-            } else {
-                message = '別氣餒，再接再厲！複習詳解能幫助您釐清觀念。';
-            }
-            scoreMessageEl.textContent = message;
-            
-            displayAnswerKey();
-        }
-
-        function displayAnswerKey() {
-            answerKey.innerHTML = '';
-            quizQuestions.forEach((question, index) => {
-                const userAnswer = userAnswers[index];
-                const correctAnswer = question.answer;
-                const isMultipleChoice = Array.isArray(correctAnswer);
-
-                let questionScore = 0;
-                let isPerfect = false;
-
-                if (isMultipleChoice) {
-                    const userSet = new Set(userAnswer);
-                    const correctSet = new Set(correctAnswer);
-                    let correctlySelected = 0;
-                    userSet.forEach(ans => {
-                        if (correctSet.has(ans)) {
-                            correctlySelected++;
-                        }
-                    });
-                    const incorrectlySelected = userSet.size - correctlySelected;
-                    const missedCorrect = correctSet.size - correctlySelected;
-                    const errors = incorrectlySelected + missedCorrect;
-
-                    if (errors === 0) {
-                        questionScore = 2;
-                        isPerfect = true;
-                    } else if (errors === 1) {
-                        questionScore = 1;
-                    }
-                } else {
-                    if (userAnswer === correctAnswer) {
-                        questionScore = 2;
-                        isPerfect = true;
-                    }
-                }
-
-                const keyItem = document.createElement('div');
-                keyItem.classList.add('p-4', 'rounded-lg', 'bg-gray-50', 'dark:bg-gray-700/50');
-                
-                let answerHtml;
-                const hasAnswered = (isMultipleChoice) ? userAnswer.length > 0 : userAnswer !== null;
-                if (hasAnswered) {
-                    const yourAnswerText = `您的答案：${isMultipleChoice ? userAnswer.sort().join(', ') : userAnswer}`;
-                    const answerStatus = (isMultipleChoice ? (isPerfect ? `<span class="text-green-500 font-bold ml-2">✔ 完全正確 (+2分)</span>` : (questionScore > 0 ? `<span class="text-yellow-500 font-bold ml-2">部分正確 (+1分)</span>` : `<span class="text-red-500 font-bold ml-2">✘ 錯誤 (+0分)</span>`)) : (isPerfect ? `<span class="text-green-500 font-bold ml-2">✔ 正確 (+2分)</span>` : `<span class="text-red-500 font-bold ml-2">✘ 錯誤 (+0分)</span>`));
-                    answerHtml = `<p class="mt-2 text-sm">${yourAnswerText} ${answerStatus}</p>`;
-                } else {
-                    answerHtml = `<p class="mt-2 text-sm text-gray-500">未作答</p>`;
-                }
-
-                keyItem.innerHTML = `
-                    <p class="font-bold mb-2">${index + 1}. ${question.question}</p>
-                    <div class="pl-4 text-sm space-y-1">
-                        ${question.options.map(opt => {
-                            const optChar = opt.charAt(0);
-                            let classes = 'text-gray-600 dark:text-gray-300';
-                            const isCorrectAnswer = isMultipleChoice ? correctAnswer.includes(optChar) : correctAnswer === optChar;
-                            const isSelected = isMultipleChoice ? userAnswer.includes(optChar) : userAnswer === optChar;
-
-                            if (isCorrectAnswer) {
-                                classes = 'text-green-600 dark:text-green-400 font-bold';
-                            } else if (isSelected && !isCorrectAnswer) {
-                                classes = 'text-red-600 dark:text-red-400 line-through';
-                            }
-                            return `<p class="${classes}">${opt}</p>`;
-                        }).join('')}
-                    </div>
-                    ${answerHtml}
-                    <p class="mt-1 text-sm text-blue-500">正確答案：${isMultipleChoice ? correctAnswer.sort().join(', ') : correctAnswer}</p>
-                `;
-                answerKey.appendChild(keyItem);
-            });
-        }
-
-        function restartQuiz() {
-            clearInterval(timerInterval);
-            resultScreen.classList.add('hidden');
-            startScreen.classList.remove('hidden');
-        }
-
-        // Event Listeners
-        startBtn.addEventListener('click', startQuiz);
-        prevBtn.addEventListener('click', () => handleNav(-1));
-        nextBtn.addEventListener('click', handleSubmit);
-        restartBtn.addEventListener('click', restartQuiz);
-        
-        confirmSubmitBtn.addEventListener('click', () => {
-            confirmModal.classList.add('hidden');
-            processAndShowResults(false);
-        });
-
-        cancelSubmitBtn.addEventListener('click', () => {
-            confirmModal.classList.add('hidden');
-        });
-
-    </script>
+  <!-- 只剩這一行 JS 呼叫 -->
+  <script type="module" src="main.js"></script>
 </body>
 </html>
